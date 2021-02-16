@@ -18,13 +18,65 @@ struct queue
 typedef struct queue QUEUE;
 
 /* Function prototypes */
+int *create_service_points(int);
 NODE *new_node(int);
 QUEUE *initialise();
 int is_empty(QUEUE *);
 void enqueue(QUEUE *, int);
 void dequeue(QUEUE *);
 
+
+/* Main function */
+int main()
+{
+    QUEUE *q = initialise();
+    enqueue(q, 10);
+    enqueue(q, 20);
+    dequeue(q);
+    dequeue(q);
+    enqueue(q, 30);
+    enqueue(q, 40);
+    enqueue(q, 50);
+    dequeue(q);
+    printf("Queue Front: %d\n", q->front->data);
+    printf("Queue Rear: %d\n", q->rear->data);
+
+    // Creates a random number of service points.
+    int points = rand();
+    int *service_points = (int *)create_service_points(points);
+
+    printf("Number of Service Points: %d\n", points);
+    int j;
+    for (j = 0; j < points; j++)
+    {
+        printf("Service Point: %d, Value: %d\n", j, service_points[j]);
+    }
+
+    return 0;
+}
+
 /* Other functions */
+
+/* Creates the empty service points to start with. */
+int *create_service_points(int points)
+{
+    int i;
+    // Dynamically allocates memory according to the number of service points.
+    int *service_points = NULL;
+    if (!(service_points = (int *)malloc(points * sizeof(int))))
+    {
+        printf("Out of memory.\n");
+        exit(1);
+    };
+
+    // Assigns each service point to represent them being empty.
+    for (i = 0; i < points; i++)
+    {
+        service_points[i] = 0;
+    }
+
+    return service_points;
+}
 
 /* Creates a new linked list node to represent a person. */
 NODE *new_node(int value)
@@ -91,22 +143,4 @@ void dequeue(QUEUE *q)
     }
 
     free(person);
-}
-
-/* Main function */
-int main()
-{
-    QUEUE *q = initialise();
-    enqueue(q, 10);
-    enqueue(q, 20);
-    dequeue(q);
-    dequeue(q);
-    enqueue(q, 30);
-    enqueue(q, 40);
-    enqueue(q, 50);
-    dequeue(q);
-    printf("Queue Front: %d\n", q->front->data);
-    printf("Queue Rear: %d\n", q->rear->data);
-
-    return 0;
 }

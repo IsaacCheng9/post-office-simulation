@@ -5,7 +5,7 @@
 /* Node structure using a linked list. */
 struct node
 {
-    int key;
+    int data;
     struct node *next;
 };
 typedef struct node NODE;
@@ -17,29 +17,31 @@ struct queue
 };
 typedef struct queue QUEUE;
 
-/* Creates a new linked list node to represent a person. */
-struct node *new_node(int value)
-{
-    struct node *person = (struct node *)malloc(sizeof(struct node));
-    person->key = value;
-    person->next = NULL;
-    return person;
-}
-
-/* Creates an empty queue. */
-struct queue *initialise()
-{
-    struct queue *q = (struct queue *)malloc(sizeof(struct queue));
-    q->front = q->rear = NULL;
-    return q;
-}
-
 /* Function prototypes */
+NODE *new_node(int);
+QUEUE *initialise();
 int is_empty(QUEUE *);
 void enqueue(QUEUE *, int);
 void dequeue(QUEUE *);
 
 /* Other functions */
+
+/* Creates a new linked list node to represent a person. */
+NODE *new_node(int value)
+{
+    NODE *person = (NODE *)malloc(sizeof(NODE));
+    person->data = value;
+    person->next = NULL;
+    return person;
+}
+
+/* Creates an empty queue. */
+QUEUE *initialise()
+{
+    QUEUE *q = (QUEUE *)malloc(sizeof(QUEUE));
+    q->front = q->rear = NULL;
+    return q;
+}
 
 int is_empty(QUEUE *q)
 {
@@ -102,8 +104,8 @@ int main()
     enqueue(q, 40);
     enqueue(q, 50);
     dequeue(q);
-    printf("Queue Front: %d\n", q->front->key);
-    printf("Queue Rear: %d\n", q->rear->key);
+    printf("Queue Front: %d\n", q->front->data);
+    printf("Queue Rear: %d\n", q->rear->data);
 
     return 0;
 }

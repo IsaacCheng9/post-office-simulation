@@ -1,6 +1,7 @@
 /* Queue implementation as a linked list. */
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 /* Node structure using a linked list. */
 struct node
@@ -13,38 +14,28 @@ typedef struct node NODE;
 /* Queue structure in a linked list, with front and rear pointers. */
 struct queue
 {
-    struct node *front, *rear;
+    struct node *front, *rear, *size, *max_size;
 };
 typedef struct queue QUEUE;
 
 /* Function prototypes */
 int *create_service_points(int);
 NODE *new_node(int);
-QUEUE *initialise();
+QUEUE *initialise(int);
 int is_empty(QUEUE *);
 void enqueue(QUEUE *, int);
 void dequeue(QUEUE *);
-
+void print_queue(QUEUE *);
 
 /* Main function */
 int main()
 {
-    QUEUE *q = initialise();
-    enqueue(q, 10);
-    enqueue(q, 20);
-    dequeue(q);
-    dequeue(q);
-    enqueue(q, 30);
-    enqueue(q, 40);
-    enqueue(q, 50);
-    dequeue(q);
-    printf("Queue Front: %d\n", q->front->data);
-    printf("Queue Rear: %d\n", q->rear->data);
-
     // Creates a random number of service points.
-    int points = rand();
+    srand(time(0));
+    int points = rand() / 500;
     int *service_points = (int *)create_service_points(points);
 
+    // Displays all the service points at the start.
     printf("Number of Service Points: %d\n", points);
     int j;
     for (j = 0; j < points; j++)
@@ -52,6 +43,20 @@ int main()
         printf("Service Point: %d, Value: %d\n", j, service_points[j]);
     }
 
+    // Creates the queue of customers.
+    int max_size = 20;
+    QUEUE *q = initialise(max_size);
+    int k;
+    for (k = 0; k < 20; k++)
+    {
+        srand(time(0));
+        enqueue(q, k);
+    }
+    printf("Queue Front: %d\n", q->front->data);
+    printf("Queue Rear: %d\n", q->rear->data);
+    print_queue(q);
+
+    free(q);
     return 0;
 }
 
@@ -65,7 +70,7 @@ int *create_service_points(int points)
     int *service_points = NULL;
     if (!(service_points = (int *)malloc(points * sizeof(int))))
     {
-        printf("Out of memory.\n");
+        fprintf(stderr, "Insufficient memory.\n");
         exit(1);
     };
 
@@ -82,16 +87,30 @@ int *create_service_points(int points)
 NODE *new_node(int value)
 {
     NODE *person = (NODE *)malloc(sizeof(NODE));
+    if (person == NULL)
+    {
+        fprintf(stderr, "Insufficient memory.\n");
+        exit(1);
+    }
+
     person->data = value;
     person->next = NULL;
     return person;
 }
 
 /* Creates an empty queue. */
-QUEUE *initialise()
+QUEUE *initialise(int max_size)
 {
     QUEUE *q = (QUEUE *)malloc(sizeof(QUEUE));
+    if (q == NULL)
+    {
+        fprintf(stderr, "Insufficient memory.\n");
+        exit(1);
+    }
+
     q->front = q->rear = NULL;
+    q->size = 0;
+    q->max_size = max_size;
     return q;
 }
 
@@ -140,6 +159,21 @@ void dequeue(QUEUE *q)
     if (q->front == NULL)
     {
         q->rear = NULL;
+    }
+
+    free(person);
+}
+
+/* Displays the full queue, alongside the details of people in the queue. */
+void print_queue(QUEUE *q)
+{
+    NODE *person = q->front;
+    int iterator = 0;
+    while (person != NULL)
+    {
+        printf("Queue Node: %d\n   Data Value: %d\n   Pointer: %p\n   Next Pointer: %p\n", iterator, person->data, person, person->next);
+        person = person->next;
+        iterator += 1;
     }
 
     free(person);

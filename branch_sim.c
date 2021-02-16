@@ -57,7 +57,7 @@ int main()
     print_queue(q);
 
     free(q);
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 /* Other functions */
@@ -71,7 +71,7 @@ int *create_service_points(int points)
     if (!(service_points = (int *)malloc(points * sizeof(int))))
     {
         fprintf(stderr, "Insufficient memory.\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     };
 
     // Assigns each service point to represent them being empty.
@@ -80,6 +80,7 @@ int *create_service_points(int points)
         service_points[i] = 0;
     }
 
+    free(service_points);
     return service_points;
 }
 
@@ -90,11 +91,12 @@ NODE *new_node(int value)
     if (person == NULL)
     {
         fprintf(stderr, "Insufficient memory.\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     person->data = value;
     person->next = NULL;
+    free(person);
     return person;
 }
 
@@ -105,7 +107,7 @@ QUEUE *initialise(int max_size)
     if (q == NULL)
     {
         fprintf(stderr, "Insufficient memory.\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     q->front = q->rear = NULL;
@@ -175,6 +177,4 @@ void print_queue(QUEUE *q)
         person = person->next;
         iterator += 1;
     }
-
-    free(person);
 }

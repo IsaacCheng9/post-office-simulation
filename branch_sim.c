@@ -25,8 +25,7 @@ NODE *new_node(int);
 QUEUE *initialise(int);
 int is_empty(QUEUE *);
 void enqueue(QUEUE *, int);
-int dequeue(int, QUEUE *);
-int pop(QUEUE *);
+int dequeue(QUEUE *);
 void print_queue(QUEUE *);
 
 /* Main function */
@@ -56,6 +55,9 @@ int main()
     }
     printf("Queue Front: %d\n", q->front->hours);
     printf("Queue Rear: %d\n", q->rear->hours);
+    print_queue(q);
+
+    dequeue(q);
     print_queue(q);
 
     free(service_points);
@@ -151,25 +153,18 @@ void enqueue(QUEUE *q, int value)
 }
 
 /* Removes a given value from the queue. */
-int dequeue(int index, QUEUE *q)
+int dequeue(QUEUE *q)
 {
-    /* Iterator to traverse linked list until index reached. */
-    int iterator = 0;
-
     /* Returns NULL if the queue is empty. */
     if (is_empty(q))
     {
         return 0;
     }
 
-    /* Starts iterating from the front of the queue. */
+    /* Gets the previous front of the queue. */
     NODE *person = q->front;
-    for (iterator = 0; iterator < index; iterator++)
-    {
-        person = person->next;
-    }
 
-    /* Stores the previous front of the queue, and moves the next person up. */
+    /* Stores the hours from the person, and moves the next person up. */
     int hours = person->hours;
     q->front = q->front->next;
 
@@ -185,25 +180,23 @@ int dequeue(int index, QUEUE *q)
     return hours;
 }
 
-/* Dequeues a value from the front of the queue. */
-int pop(QUEUE *q)
-{
-    return dequeue(0, q);
-}
-
 /* Displays the full queue, alongside the details of people in the queue. */
 void print_queue(QUEUE *q)
 {
+    /* Starts from the front of the queue. */
     NODE *person = q->front;
     int iterator = 0;
+
+    /* Iterates to print the details of each person in the queue. */
     while (person != NULL)
     {
-        printf("\nQueue Node: %d\n   Hours: %d\n   Time Waited: %d\n   Tolerance: %d\n   Pointer: %p\n   Next Pointer: %p\n",
-               iterator,
-               person->hours, person->time_waited, person->tolerance, person,
-               person->next);
+        printf("\nQueue Node: %d\n   Hours: %d\n   Time Waited: %d\n   "
+               "Tolerance: %d\n   Pointer: %p\n   Next Pointer: %p\n",
+               iterator, person->hours, person->time_waited, person->tolerance,
+               person, person->next);
         person = person->next;
         iterator += 1;
     }
+
     printf("\nQueue Size: %d\n", q->size);
 }

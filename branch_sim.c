@@ -6,7 +6,7 @@
 /* Node structure using a linked list. */
 struct node
 {
-    int data;
+    int hours;
     struct node *next;
 };
 typedef struct node NODE;
@@ -24,18 +24,19 @@ NODE *new_node(int);
 QUEUE *initialise(int);
 int is_empty(QUEUE *);
 void enqueue(QUEUE *, int);
-void dequeue(QUEUE *);
+int dequeue(QUEUE *);
 void print_queue(QUEUE *);
 
 /* Main function */
 int main()
 {
-    // Creates a random number of service points.
+    /* Creates a random number of service points. */
     srand(time(0));
-    int points = rand() / 500;
+    /* int points = rand() / 500; */
+    int points = 20;
     int *service_points = (int *)create_service_points(points);
 
-    // Displays all the service points at the start.
+    /* Displays all the service points at the start. */
     printf("Number of Service Points: %d\n", points);
     int j;
     for (j = 0; j < points; j++)
@@ -43,19 +44,19 @@ int main()
         printf("Service Point: %d, Value: %d\n", j, service_points[j]);
     }
 
-    // Creates the queue of customers.
+    /* Creates the queue of customers. */
     int max_size = 20;
     QUEUE *q = initialise(max_size);
     int k;
     for (k = 0; k < 20; k++)
     {
-        srand(time(0));
         enqueue(q, k);
     }
-    printf("Queue Front: %d\n", q->front->data);
-    printf("Queue Rear: %d\n", q->rear->data);
+    printf("Queue Front: %d\n", q->front->hours);
+    printf("Queue Rear: %d\n", q->rear->hours);
     print_queue(q);
 
+    free(service_points);
     free(q);
     return EXIT_SUCCESS;
 }
@@ -66,7 +67,7 @@ int main()
 int *create_service_points(int points)
 {
     int i;
-    // Dynamically allocates memory according to the number of service points.
+    /* Dynamically allocates memory based on the number of service points. */
     int *service_points = NULL;
     if (!(service_points = (int *)malloc(points * sizeof(int))))
     {
@@ -74,13 +75,12 @@ int *create_service_points(int points)
         exit(EXIT_FAILURE);
     };
 
-    // Assigns each service point to represent them being empty.
+    /* Assigns each service point to represent them being empty. */
     for (i = 0; i < points; i++)
     {
         service_points[i] = 0;
     }
 
-    free(service_points);
     return service_points;
 }
 
@@ -94,9 +94,9 @@ NODE *new_node(int value)
         exit(EXIT_FAILURE);
     }
 
-    person->data = value;
+    person->hours = value;
     person->next = NULL;
-    free(person);
+
     return person;
 }
 
@@ -113,6 +113,7 @@ QUEUE *initialise(int max_size)
     q->front = q->rear = NULL;
     q->size = 0;
     q->max_size = max_size;
+
     return q;
 }
 
@@ -125,7 +126,7 @@ int is_empty(QUEUE *q)
 /* Adds a value onto the end of the queue and increases queue count. */
 void enqueue(QUEUE *q, int value)
 {
-    // Creates a new node and its data and next node pointer.
+    /* Creates a new node and its hours and next node pointer. */
     NODE *person = new_node(value);
 
     /* Points front and rear of the queue to the new node if empty. Otherwise,
@@ -144,16 +145,17 @@ void enqueue(QUEUE *q, int value)
 }
 
 /* Removes a value from the front of the queue. */
-void dequeue(QUEUE *q)
+int dequeue(QUEUE *q)
 {
-    // Returns NULL if the queue is empty.
+    /* Returns NULL if the queue is empty. */
     if (is_empty(q))
     {
-        return;
+        return 0;
     }
 
-    // Stores the previous front of the queue, and moves the next person up.
+    /* Stores the previous front of the queue, and moves the next person up. */
     NODE *person = q->front;
+    int hours = q->front->hours;
     q->front = q->front->next;
 
     /* If this makes the front empty, make the rear empty, as this means the
@@ -164,6 +166,7 @@ void dequeue(QUEUE *q)
     }
 
     free(person);
+    return hours;
 }
 
 /* Displays the full queue, alongside the details of people in the queue. */
@@ -173,7 +176,7 @@ void print_queue(QUEUE *q)
     int iterator = 0;
     while (person != NULL)
     {
-        printf("Queue Node: %d\n   Data Value: %d\n   Pointer: %p\n   Next Pointer: %p\n", iterator, person->data, person, person->next);
+        printf("Queue Node: %d\n   Hours: %d\n   Pointer: %p\n   Next Pointer: %p\n", iterator, person->hours, person, person->next);
         person = person->next;
         iterator += 1;
     }

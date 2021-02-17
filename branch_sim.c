@@ -1,4 +1,5 @@
 /* Queue implementation as a linked list. */
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -82,7 +83,7 @@ int *create_service_points(int num_points)
     int *service_points = NULL;
     if (!(service_points = (int *)malloc(num_points * sizeof(int))))
     {
-        fprintf(stderr, "Insufficient memory.\n");
+        fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
     };
 
@@ -101,7 +102,7 @@ NODE *new_node(int value)
     NODE *person = (NODE *)malloc(sizeof(NODE));
     if (person == NULL)
     {
-        fprintf(stderr, "Insufficient memory.\n");
+        fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -119,7 +120,7 @@ QUEUE *initialise(int max_size)
     QUEUE *q = (QUEUE *)malloc(sizeof(QUEUE));
     if (q == NULL)
     {
-        fprintf(stderr, "Insufficient memory.\n");
+        fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 

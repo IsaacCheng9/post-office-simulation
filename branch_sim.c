@@ -14,7 +14,8 @@ typedef struct node NODE;
 /* Queue structure in a linked list, with front and rear pointers. */
 struct queue
 {
-    struct node *front, *rear, *size, *max_size;
+    struct node *front, *rear;
+    int size, max_size;
 };
 typedef struct queue QUEUE;
 
@@ -49,12 +50,13 @@ int main()
     int max_size = 20;
     QUEUE *q = initialise(max_size);
     int k;
-    for (k = 0; k < 20; k++)
+    for (k = 0; k < 2; k++)
     {
         enqueue(q, k);
     }
     printf("Queue Front: %d\n", q->front->hours);
     printf("Queue Rear: %d\n", q->rear->hours);
+    print_queue(q);
 
     free(service_points);
     free(q);
@@ -193,9 +195,9 @@ void print_queue(QUEUE *q)
     int iterator = 0;
     while (person != NULL)
     {
-        printf("Queue Node: %d\n   Hours: %d\n   Pointer: %p\n   Next Pointer: %p\n", iterator, person->hours, person, person->next);
+        printf("\nQueue Node: %d\n   Hours: %d\n   Pointer: %p\n   Next Pointer: %p\n", iterator, person->hours, person, person->next);
         person = person->next;
         iterator += 1;
     }
-    printf("Queue Size: %d", q->size);
+    printf("\nQueue Size: %d\n", q->size);
 }

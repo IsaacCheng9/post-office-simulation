@@ -6,7 +6,7 @@
 /* Node structure using a linked list. */
 struct node
 {
-    int hours;
+    int hours, time_waited, tolerance;
     struct node *next;
 };
 typedef struct node NODE;
@@ -50,7 +50,7 @@ int main()
     int max_size = 20;
     QUEUE *q = initialise(max_size);
     int k;
-    for (k = 0; k < 2; k++)
+    for (k = 0; k < 20; k++)
     {
         enqueue(q, k);
     }
@@ -97,6 +97,8 @@ NODE *new_node(int value)
     }
 
     person->hours = value;
+    person->time_waited = 0;
+    person->tolerance = value;
     person->next = NULL;
 
     return person;
@@ -184,7 +186,8 @@ int dequeue(int index, QUEUE *q)
 }
 
 /* Dequeues a value from the front of the queue. */
-int pop(QUEUE *q) {
+int pop(QUEUE *q)
+{
     return dequeue(0, q);
 }
 
@@ -195,7 +198,10 @@ void print_queue(QUEUE *q)
     int iterator = 0;
     while (person != NULL)
     {
-        printf("\nQueue Node: %d\n   Hours: %d\n   Pointer: %p\n   Next Pointer: %p\n", iterator, person->hours, person, person->next);
+        printf("\nQueue Node: %d\n   Hours: %d\n   Time Waited: %d\n   Tolerance: %d\n   Pointer: %p\n   Next Pointer: %p\n",
+               iterator,
+               person->hours, person->time_waited, person->tolerance, person,
+               person->next);
         person = person->next;
         iterator += 1;
     }

@@ -25,7 +25,7 @@ QUEUE *initialise(int);
 int is_empty(QUEUE *);
 void enqueue(QUEUE *, int);
 int dequeue(int, QUEUE *);
-void pop(QUEUE *);
+int pop(QUEUE *);
 void print_queue(QUEUE *);
 
 /* Main function */
@@ -55,7 +55,6 @@ int main()
     }
     printf("Queue Front: %d\n", q->front->hours);
     printf("Queue Rear: %d\n", q->rear->hours);
-    print_queue(q);
 
     free(service_points);
     free(q);
@@ -183,8 +182,8 @@ int dequeue(int index, QUEUE *q)
 }
 
 /* Dequeues a value from the front of the queue. */
-void pop(QUEUE *q) {
-    dequeue(0, q);
+int pop(QUEUE *q) {
+    return dequeue(0, q);
 }
 
 /* Displays the full queue, alongside the details of people in the queue. */

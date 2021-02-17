@@ -24,7 +24,8 @@ NODE *new_node(int);
 QUEUE *initialise(int);
 int is_empty(QUEUE *);
 void enqueue(QUEUE *, int);
-int dequeue(QUEUE *);
+int dequeue(int, QUEUE *);
+void pop(QUEUE *);
 void print_queue(QUEUE *);
 
 /* Main function */
@@ -142,20 +143,31 @@ void enqueue(QUEUE *q, int value)
         q->rear->next = person;
         q->rear = person;
     }
+
+    q->size++;
 }
 
-/* Removes a value from the front of the queue. */
-int dequeue(QUEUE *q)
+/* Removes a given value from the queue. */
+int dequeue(int index, QUEUE *q)
 {
+    /* Iterator to traverse linked list until index reached. */
+    int iterator = 0;
+
     /* Returns NULL if the queue is empty. */
     if (is_empty(q))
     {
         return 0;
     }
 
-    /* Stores the previous front of the queue, and moves the next person up. */
+    /* Starts iterating from the front of the queue. */
     NODE *person = q->front;
-    int hours = q->front->hours;
+    for (iterator = 0; iterator < index; iterator++)
+    {
+        person = person->next;
+    }
+
+    /* Stores the previous front of the queue, and moves the next person up. */
+    int hours = person->hours;
     q->front = q->front->next;
 
     /* If this makes the front empty, make the rear empty, as this means the
@@ -166,7 +178,13 @@ int dequeue(QUEUE *q)
     }
 
     free(person);
+    q->size--;
     return hours;
+}
+
+/* Dequeues a value from the front of the queue. */
+void pop(QUEUE *q) {
+    dequeue(0, q);
 }
 
 /* Displays the full queue, alongside the details of people in the queue. */
@@ -180,4 +198,5 @@ void print_queue(QUEUE *q)
         person = person->next;
         iterator += 1;
     }
+    printf("Queue Size: %d", q->size);
 }

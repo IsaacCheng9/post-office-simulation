@@ -33,35 +33,32 @@ void print_queue(QUEUE *);
 /* Main function */
 int main(int argc, char **argv)
 {
-    /* Creates a random number of service points. */
-    srand(time(0));
-    /* int points = rand() / 500; */
-    int num_points = 5;
-    int *service_points = (int *)create_service_points(num_points);
-
-    /* Displays all the service points at the start. */
-    printf("Number of Service Points: %d\n", num_points);
-    int j;
-    for (j = 0; j < num_points; j++)
-    {
-        printf("Service Point: %d, Value: %d\n", j, service_points[j]);
-    }
-
-    /* Updates the new customers waiting to join the queue. */
-
     // Starts the simulation.
-    int num_customers = atoi(argv[1]);
-    int max_size = atoi(argv[2]);
-    int simulation_length = atoi(argv[3]);
+    /* int max_size = atoi(argv[1]);
+    int num_service_points = atoi(argv[2]);
+    int closing_time = atoi(argv[3]); */
+    int max_size = 5;
+    int num_service_points = 3;
+    int closing_time = 10;
     int time_slice;
     int num_served;
+    /* Seeds for randomness. */
+    srand(time(0));
 
-    QUEUE *q = initialise(max_size);
+    /* Creates service points and displays them at the start. */
+    int *service_points = (int *)create_service_points(num_service_points);
+    printf("Number of Service Points: %d\n", num_service_points);
+    int point;
+    for (point = 0; point < num_service_points; point++)
+    {
+        printf("Service Point: %d, Value: %d\n", point, service_points[point]);
+    }
 
     /* Creates the queue of customers. */
-    for (time_slice = 1; time_slice <= simulation_length; time_slice++)
+    QUEUE *q = initialise(max_size);
+    for (time_slice = 1; time_slice <= closing_time; time_slice++)
     {
-        printf("Iteration %d\n", time_slice);
+        printf("\nIteration %d\n", time_slice);
         float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
         int new_hours = (int)new_cust_chance;
         printf("   Random Number: %f\n   Hours: %d\n", new_cust_chance,
@@ -73,14 +70,6 @@ int main(int argc, char **argv)
     }
     print_queue(q);
 
-    /* int k;
-    for (k = 0; k < num_customers; k++)
-    {
-        enqueue(q, k);
-    }
-    printf("Queue Front: %d\n", q->front->hours);
-    printf("Queue Rear: %d\n", q->rear->hours); */
-
     free(service_points);
     free(q);
     return EXIT_SUCCESS;
@@ -89,19 +78,19 @@ int main(int argc, char **argv)
 /* Other functions */
 
 /* Creates the empty service points to start with. */
-int *create_service_points(int num_points)
+int *create_service_points(int num_service_points)
 {
     int point;
     /* Dynamically allocates memory based on the number of service points. */
     int *service_points = NULL;
-    if (!(service_points = (int *)malloc(num_points * sizeof(int))))
+    if (!(service_points = (int *)malloc(num_service_points * sizeof(int))))
     {
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
     };
 
     /* Assigns each service point to represent them being empty. */
-    for (point = 0; point < num_points; point++)
+    for (point = 0; point < num_service_points; point++)
     {
         service_points[point] = 0;
     }

@@ -23,25 +23,28 @@ typedef struct queue QUEUE;
 
 /* Function prototypes */
 int *create_service_points(int);
-NODE *new_node(int);
-QUEUE *initialise(int);
+NODE *create_new_node(int);
+QUEUE *create_empty_queue(int);
 int is_empty(QUEUE *);
+void increment_waiting_times(QUEUE *);
 void enqueue(QUEUE *, int);
 int dequeue(QUEUE *);
+int leave_queue_early(QUEUE *, int);
 void print_queue(QUEUE *);
 
 /* Main function */
 int main(int argc, char **argv)
 {
-    // Starts the simulation.
     /* int max_size = atoi(argv[1]);
     int num_service_points = atoi(argv[2]);
     int closing_time = atoi(argv[3]); */
     int max_size = 5;
     int num_service_points = 3;
     int closing_time = 10;
+    int num_served = 0;
+    int num_unfulfilled = 0;
+    int num_timed_out = 0;
     int time_slice;
-    int num_served;
     /* Seeds for randomness. */
     srand(time(0));
 
@@ -54,21 +57,32 @@ int main(int argc, char **argv)
         printf("Service Point: %d, Value: %d\n", point, service_points[point]);
     }
 
-    /* Creates the queue of customers. */
-    QUEUE *q = initialise(max_size);
+    /* Performs the simulation(s). */
+    QUEUE *q = create_empty_queue(max_size);
     for (time_slice = 1; time_slice <= closing_time; time_slice++)
     {
-        printf("\nIteration %d\n", time_slice);
         float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
         int new_hours = (int)new_cust_chance;
-        printf("   Random Number: %f\n   Hours: %d\n", new_cust_chance,
-               new_hours);
+        printf("New Hours: %d\n", new_hours);
         if (new_cust_chance >= 5.0)
         {
-            enqueue(q, new_hours);
+            /* Adds customer to the queue if there is room. */
+            if (q->size == max_size)
+            {
+                num_unfulfilled++;
+            }
+            else
+            {
+                enqueue(q, new_hours);
+            }
         }
+
+        increment_waiting_times(q);
+        num_timed_out = leave_queue_early(q, num_timed_out);
     }
     print_queue(q);
+    printf("People Unfulfilled: %d\n", num_unfulfilled);
+    printf("People Timed Out: %d", num_timed_out);
 
     free(service_points);
     free(q);
@@ -98,26 +112,26 @@ int *create_service_points(int num_service_points)
     return service_points;
 }
 
-/* Creates a new linked list node to represent a person. */
-NODE *new_node(int value)
+/* Creates a new linked list node to represent a customer. */
+NODE *create_new_node(int value)
 {
-    NODE *person = (NODE *)malloc(sizeof(NODE));
-    if (person == NULL)
+    NODE *customer = (NODE *)malloc(sizeof(NODE));
+    if (customer == NULL)
     {
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    person->hours = value;
-    person->time_waited = 0;
-    person->tolerance = value;
-    person->next = NULL;
+    customer->hours = value;
+    customer->time_waited = 0;
+    customer->tolerance = value;
+    customer->next = NULL;
 
-    return person;
+    return customer;
 }
 
 /* Creates an empty queue. */
-QUEUE *initialise(int max_size)
+QUEUE *create_empty_queue(int max_size)
 {
     QUEUE *q = (QUEUE *)malloc(sizeof(QUEUE));
     if (q == NULL)
@@ -139,24 +153,38 @@ int is_empty(QUEUE *q)
     return (q->rear == NULL);
 }
 
+/* Increments the waiting times of all people in the queue. */
+void increment_waiting_times(QUEUE *q)
+{
+    /* Starts from the front of the queue. */
+    NODE *customer = q->front;
+
+    /* Iterates to print the details of each customer in the queue. */
+    while (customer != NULL)
+    {
+        customer->time_waited++;
+        customer = customer->next;
+    }
+}
+
 /* Adds a value onto the end of the queue and increases queue count. */
 void enqueue(QUEUE *q, int value)
 {
     /* Creates a new node and its hours and next node pointer. */
-    NODE *person = new_node(value);
+    NODE *customer = create_new_node(value);
 
     /* Points front and rear of the queue to the new node if empty. Otherwise,
     points the previous rear of the node to this node, and sets the new node as
     the rear. */
     if (is_empty(q))
     {
-        q->front = q->rear = person;
+        q->front = q->rear = customer;
         return;
     }
     else
     {
-        q->rear->next = person;
-        q->rear = person;
+        q->rear->next = customer;
+        q->rear = customer;
     }
 
     q->size++;
@@ -165,17 +193,17 @@ void enqueue(QUEUE *q, int value)
 /* Removes a given value from the queue. */
 int dequeue(QUEUE *q)
 {
-    /* Returns NULL if the queue is empty. */
+    /* Returns 0 if the queue is empty; there is no request to be handled. */
     if (is_empty(q))
     {
         return 0;
     }
 
     /* Gets the previous front of the queue. */
-    NODE *person = q->front;
+    NODE *customer = q->front;
 
-    /* Stores the hours from the person, and moves the next person up. */
-    int hours = person->hours;
+    /* Stores the hours from the customer, and moves the next customer up. */
+    int hours = customer->hours;
     q->front = q->front->next;
 
     /* If this makes the front empty, make the rear empty, as this means the
@@ -185,26 +213,63 @@ int dequeue(QUEUE *q)
         q->rear = NULL;
     }
 
-    free(person);
+    free(customer);
     q->size--;
     return hours;
+}
+
+int leave_queue_early(QUEUE *q, int num_timed_out)
+{
+    /* Returns NULL if the queue is empty. */
+    if (is_empty(q))
+    {
+        return num_timed_out;
+    }
+    
+    /* Starts from the front of the queue. */
+    NODE *customer = q->front;
+
+    /* Iterates to check for customers in the queue who are leaving early. */
+    while (customer != NULL)
+    {
+        /* Checks if customer has waited for longer than they will tolerate. */
+        if (customer->time_waited > customer->tolerance)
+        {
+            /* Moves the next customer up. */
+            q->front = q->front->next;
+
+            /* If this makes the front empty, make the rear empty, as this
+            means the queue is empty. */
+            if (q->front == NULL)
+            {
+                q->rear = NULL;
+            }
+
+            num_timed_out++;
+            q->size--;
+        }
+        customer = customer->next;
+    }
+
+    free(customer);
+    return num_timed_out;
 }
 
 /* Displays the full queue, alongside the details of people in the queue. */
 void print_queue(QUEUE *q)
 {
     /* Starts from the front of the queue. */
-    NODE *person = q->front;
+    NODE *customer = q->front;
     int iterator = 0;
 
-    /* Iterates to print the details of each person in the queue. */
-    while (person != NULL)
+    /* Iterates to print the details of each customer in the queue. */
+    while (customer != NULL)
     {
         printf("\nQueue Node: %d\n   Hours: %d\n   Time Waited: %d\n   "
                "Tolerance: %d\n   Pointer: %p\n   Next Pointer: %p\n",
-               iterator, person->hours, person->time_waited, person->tolerance,
-               person, person->next);
-        person = person->next;
+               iterator, customer->hours, customer->time_waited, customer->tolerance,
+               customer, customer->next);
+        customer = customer->next;
         iterator += 1;
     }
 

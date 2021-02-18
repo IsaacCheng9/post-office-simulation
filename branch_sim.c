@@ -17,7 +17,7 @@ typedef struct node NODE;
 struct queue
 {
     struct node *front, *rear;
-    int size, max_size;
+    int queue_length, max_queue_length;
 };
 typedef struct queue QUEUE;
 
@@ -35,10 +35,10 @@ void print_queue(QUEUE *);
 /* Main function */
 int main(int argc, char **argv)
 {
-    /* int max_size = atoi(argv[1]);
+    /* int max_queue_length = atoi(argv[1]);
     int num_service_points = atoi(argv[2]);
     int closing_time = atoi(argv[3]); */
-    int max_size = 5;
+    int max_queue_length = 5;
     int num_service_points = 3;
     int closing_time = 10;
     int num_served = 0;
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     }
 
     /* Performs the simulation(s). */
-    QUEUE *q = create_empty_queue(max_size);
+    QUEUE *q = create_empty_queue(max_queue_length);
     for (time_slice = 1; time_slice <= closing_time; time_slice++)
     {
         float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         if (new_cust_chance >= 5.0)
         {
             /* Adds customer to the queue if there is room. */
-            if (q->size == max_size)
+            if (q->queue_length == max_queue_length)
             {
                 num_unfulfilled++;
             }
@@ -131,7 +131,7 @@ NODE *create_new_node(int value)
 }
 
 /* Creates an empty queue. */
-QUEUE *create_empty_queue(int max_size)
+QUEUE *create_empty_queue(int max_queue_length)
 {
     QUEUE *q = (QUEUE *)malloc(sizeof(QUEUE));
     if (q == NULL)
@@ -141,8 +141,8 @@ QUEUE *create_empty_queue(int max_size)
     }
 
     q->front = q->rear = NULL;
-    q->size = 0;
-    q->max_size = max_size;
+    q->queue_length = 0;
+    q->max_queue_length = max_queue_length;
 
     return q;
 }
@@ -187,7 +187,7 @@ void enqueue(QUEUE *q, int value)
         q->rear = customer;
     }
 
-    q->size++;
+    q->queue_length++;
 }
 
 /* Removes a given value from the queue. */
@@ -214,7 +214,7 @@ int dequeue(QUEUE *q)
     }
 
     free(customer);
-    q->size--;
+    q->queue_length--;
     return hours;
 }
 
@@ -246,7 +246,7 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
             }
 
             num_timed_out++;
-            q->size--;
+            q->queue_length--;
         }
         customer = customer->next;
     }
@@ -267,11 +267,11 @@ void print_queue(QUEUE *q)
     {
         printf("\nQueue Node: %d\n   Hours: %d\n   Time Waited: %d\n   "
                "Tolerance: %d\n   Pointer: %p\n   Next Pointer: %p\n",
-               iterator, customer->hours, customer->time_waited, customer->tolerance,
-               customer, customer->next);
+               iterator, customer->hours, customer->time_waited,
+               customer->tolerance, customer, customer->next);
         customer = customer->next;
         iterator += 1;
     }
 
-    printf("\nQueue Size: %d\n", q->size);
+    printf("\nQueue Size: %d\n", q->queue_length);
 }

@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 /* Node structure using a linked list. */
@@ -35,7 +36,7 @@ int main(int argc, char **argv)
     /* Creates a random number of service points. */
     srand(time(0));
     /* int points = rand() / 500; */
-    int num_points = 20;
+    int num_points = 5;
     int *service_points = (int *)create_service_points(num_points);
 
     /* Displays all the service points at the start. */
@@ -46,19 +47,31 @@ int main(int argc, char **argv)
         printf("Service Point: %d, Value: %d\n", j, service_points[j]);
     }
 
+    /* Updates the new customers waiting to join the queue. */
+
     // Starts the simulation.
     int num_customers = atoi(argv[1]);
     int max_size = atoi(argv[2]);
     int simulation_length = atoi(argv[3]);
     int time_slice;
-    /* Creates the queue of customers. */
-    for (time_slice = 0; time_slice < simulation_length; time_slice++)
-    {
-        printf("Success!\n");
-    }
+    int num_served;
 
-    
     QUEUE *q = initialise(max_size);
+
+    /* Creates the queue of customers. */
+    for (time_slice = 1; time_slice <= simulation_length; time_slice++)
+    {
+        printf("Iteration %d\n", time_slice);
+        float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
+        int new_hours = (int)new_cust_chance;
+        printf("   Random Number: %f\n   Hours: %d\n", new_cust_chance,
+               new_hours);
+        if (new_cust_chance >= 5.0)
+        {
+            enqueue(q, new_hours);
+        }
+    }
+    print_queue(q);
 
     /* int k;
     for (k = 0; k < num_customers; k++)

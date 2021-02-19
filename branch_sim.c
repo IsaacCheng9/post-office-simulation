@@ -29,6 +29,8 @@ int is_empty(QUEUE *);
 void increment_waiting_times(QUEUE *);
 void enqueue(QUEUE *, int);
 int dequeue(QUEUE *);
+void fulfil_customer(QUEUE *, int, int *);
+int serve_customers(int, int, int *);
 int leave_queue_early(QUEUE *, int);
 void print_queue(QUEUE *);
 
@@ -61,11 +63,22 @@ int main(int argc, char **argv)
     QUEUE *q = create_empty_queue(max_queue_length);
     for (time_slice = 1; time_slice <= closing_time; time_slice++)
     {
+        num_served = serve_customers(num_served, num_service_points,
+                                     service_points);
+
+        /* Checks if service points are available for the next customer. */
+        if (!(is_empty(q)))
+        {
+            fulfil_customer(q, num_service_points, service_points);
+        }
+
+        /* Adds new customers to the queue. */
         float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
         int new_hours = (int)new_cust_chance;
-        printf("New Hours: %d\n", new_hours);
         if (new_cust_chance >= 5.0)
         {
+            printf("Time Slice: %d\n   New Hours: %d\n", time_slice,
+                   new_hours);
             /* Adds customer to the queue if there is room. */
             if (q->queue_length == max_queue_length)
             {
@@ -81,6 +94,7 @@ int main(int argc, char **argv)
         num_timed_out = leave_queue_early(q, num_timed_out);
     }
     print_queue(q);
+    printf("People Served: %d\n", num_served);
     printf("People Unfulfilled: %d\n", num_unfulfilled);
     printf("People Timed Out: %d", num_timed_out);
 
@@ -218,6 +232,51 @@ int dequeue(QUEUE *q)
     return hours;
 }
 
+/* Attempts to service the customer at the front of the queue. */
+void fulfil_customer(QUEUE *q, int num_service_points, int *service_points)
+{
+    /* Takes the customer from the front of the queue. */
+    NODE *customer = q->front;
+
+    /* Finds the first service point which is available. */
+    int point;
+    for (point = 0; point < num_service_points; point++)
+    {
+        if (service_points[point] == 0)
+        {
+            service_points[point] = customer->hours;
+            dequeue(q);
+            printf("   Fulfilled customer!\n");
+            return;
+        }
+    }
+
+    printf("   No service points free!\n");
+}
+
+/* Processes customers being served for that time slice. */
+int serve_customers(int num_served, int num_service_points, int *service_points)
+{
+    /* Iterates to check for service points which are being used. */
+    int point;
+    for (point = 0; point < num_service_points; point++)
+    {
+        if (service_points[point] != 0)
+        {
+            service_points[point]--;
+            /* Checks if a customer has been fully served. */
+            if (service_points[point] == 0)
+            {
+                printf("   Finished serving customer!\n");
+                num_served++;
+            }
+        }
+    }
+
+    return num_served;
+}
+
+/* Removes people who have waited for too long from the queue. */
 int leave_queue_early(QUEUE *q, int num_timed_out)
 {
     /* Returns NULL if the queue is empty. */
@@ -225,7 +284,7 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
     {
         return num_timed_out;
     }
-    
+
     /* Starts from the front of the queue. */
     NODE *customer = q->front;
 
@@ -273,5 +332,5 @@ void print_queue(QUEUE *q)
         iterator += 1;
     }
 
-    printf("\nQueue Size: %d\n", q->queue_length);
+    printf("\nQueue Length: %d\n", q->queue_length);
 }

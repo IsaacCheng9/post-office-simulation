@@ -42,8 +42,8 @@ int main(int argc, char **argv)
     int num_service_points = atoi(argv[2]);
     int closing_time = atoi(argv[3]); */
     int max_queue_length = 2;
-    int num_service_points = 1;
-    int closing_time = 10;
+    int num_service_points = 2;
+    int closing_time = 15;
     int num_customers = 0;
     int num_fulfilled = 0;
     int num_unfulfilled = 0;
@@ -157,9 +157,9 @@ NODE *create_new_node(int value)
         exit(EXIT_FAILURE);
     }
 
-    customer->hours = value;
+    customer->hours = (int) 10.0 * (float)rand() / RAND_MAX;
     customer->time_waited = 0;
-    customer->tolerance = 3;
+    customer->tolerance = (int) 10.0 * (float)rand() / RAND_MAX;
     customer->next = NULL;
 
     return customer;
@@ -314,7 +314,7 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
     while (customer != NULL)
     {
         /* Checks if customer has waited for longer than they will tolerate. */
-        if (customer->time_waited > customer->tolerance)
+        if (customer->time_waited == customer->tolerance)
         {
             /* Moves the next customer up. */
             q->front = q->front->next;

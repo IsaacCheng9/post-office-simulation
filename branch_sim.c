@@ -52,17 +52,39 @@ int main(int argc, char **argv)
 
     /* Creates service points and displays them at the start. */
     int *service_points = (int *)create_service_points(num_service_points);
-    printf("Number of Service Points: %d\n", num_service_points);
-    int point;
+    printf("Number of Service Points: %d\n\n", num_service_points);
+    /* int point;
     for (point = 0; point < num_service_points; point++)
     {
         printf("Service Point: %d, Value: %d\n", point, service_points[point]);
-    }
+    } */
 
     /* Performs the simulation(s). */
     QUEUE *q = create_empty_queue(max_queue_length);
     for (time_slice = 1; time_slice <= closing_time; time_slice++)
     {
+        printf("Time Slice: %d\n", time_slice);
+
+        /* Adds new customers to the queue. */
+        float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
+        int new_hours = (int)new_cust_chance;
+        if (new_cust_chance >= 5.0)
+        {
+            printf("   New Hours: %d\n", new_hours);
+            /* Adds customer to the queue if there is room. */
+            if (q->queue_length == max_queue_length)
+            {
+                num_unfulfilled++;
+            }
+            else
+            {
+                enqueue(q, new_hours);
+                printf("   Added to queue. Queue length is %d. \n",
+                       q->queue_length);
+            }
+        }
+
+        /* Serves customers currently on the service points. */
         num_served = serve_customers(num_served, num_service_points,
                                      service_points);
 
@@ -72,24 +94,7 @@ int main(int argc, char **argv)
             fulfil_customer(q, num_service_points, service_points);
         }
 
-        /* Adds new customers to the queue. */
-        float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
-        int new_hours = (int)new_cust_chance;
-        if (new_cust_chance >= 5.0)
-        {
-            printf("Time Slice: %d\n   New Hours: %d\n", time_slice,
-                   new_hours);
-            /* Adds customer to the queue if there is room. */
-            if (q->queue_length == max_queue_length)
-            {
-                num_unfulfilled++;
-            }
-            else
-            {
-                enqueue(q, new_hours);
-            }
-        }
-
+        /* Updates the time waited of every customer in the queue. */
         increment_waiting_times(q);
         num_timed_out = leave_queue_early(q, num_timed_out);
     }
@@ -193,15 +198,15 @@ void enqueue(QUEUE *q, int value)
     if (is_empty(q))
     {
         q->front = q->rear = customer;
+        q->queue_length++;
         return;
     }
     else
     {
         q->rear->next = customer;
         q->rear = customer;
+        q->queue_length++;
     }
-
-    q->queue_length++;
 }
 
 /* Removes a given value from the queue. */

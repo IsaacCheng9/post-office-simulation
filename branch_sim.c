@@ -38,12 +38,17 @@ void print_queue(QUEUE *);
 /* Main function */
 int main(int argc, char **argv)
 {
+    /* Configuration variables. */
     /* int max_queue_length = atoi(argv[1]);
     int num_service_points = atoi(argv[2]);
     int closing_time = atoi(argv[3]); */
     int max_queue_length = 2;
     int num_service_points = 2;
-    int closing_time = 15;
+    int closing_time = 10;
+    int num_simulations = 5;
+
+    /* Variables for the running/output of the simulations. */
+    int simulation;
     int num_customers = 0;
     int num_fulfilled = 0;
     int num_unfulfilled = 0;
@@ -55,72 +60,76 @@ int main(int argc, char **argv)
 
     /* Creates service points and displays them at the start. */
     int *service_points = (int *)create_service_points(num_service_points);
-    printf("Number of Service Points: %d\n\n", num_service_points);
+    printf("Number of Service Points: %d\n", num_service_points);
 
-    /* Performs the simulation(s). */
-    QUEUE *q = create_empty_queue(max_queue_length);
-    printf("Starting simulation.\n");
-    time_slice = 1;
-    while (closed == 0)
+    for (simulation = 1; simulation <= num_simulations; simulation++)
     {
-        printf("Time Slice: %d\n", time_slice);
-
-        /* Adds new customers to the queue if not past closing time. */
-        if (time_slice <= closing_time)
+        /* Performs the simulation(s). */
+        QUEUE *q = create_empty_queue(max_queue_length);
+        printf("\nStarting simulation #%d.\n", simulation);
+        time_slice = 1;
+        closed = 0;
+        while (closed == 0)
         {
-            float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
-            int new_hours = (int)new_cust_chance;
-            if (new_cust_chance >= 5.0)
+            printf("Time Slice: %d\n", time_slice);
+
+            /* Adds new customers to the queue if not past closing time. */
+            if (time_slice <= closing_time)
             {
-                num_customers++;
-                printf("   New Hours: %d\n", new_hours);
-                /* Marks the customer as unfulfilled if queue is full. */
-                if (q->queue_length == max_queue_length)
+                float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
+                int new_hours = (int)new_cust_chance;
+                if (new_cust_chance >= 5.0)
                 {
-                    num_unfulfilled++;
-                    printf("   Customer unfulfilled; queue is full.\n");
-                }
-                /* Adds customer to the queue if there is space. */
-                else
-                {
-                    enqueue(q, new_hours);
-                    printf("   Customer added to queue. Queue length is now %d"
-                           ".\n",
-                           q->queue_length);
+                    num_customers++;
+                    printf("   New Hours: %d\n", new_hours);
+                    /* Marks the customer as unfulfilled if queue is full. */
+                    if (q->queue_length == max_queue_length)
+                    {
+                        num_unfulfilled++;
+                        printf("   Customer unfulfilled; queue is full.\n");
+                    }
+                    /* Adds customer to the queue if there is space. */
+                    else
+                    {
+                        enqueue(q, new_hours);
+                        printf("   Customer added to queue. Queue length is now %d"
+                            ".\n",
+                            q->queue_length);
+                    }
                 }
             }
-        }
 
-        /* Serves customers currently on the service points. */
-        num_fulfilled = serve_customers(num_fulfilled, num_service_points,
-                                        service_points);
+            /* Serves customers currently on the service points. */
+            num_fulfilled = serve_customers(num_fulfilled, num_service_points,
+                                            service_points);
 
-        /* Checks if service points are available for the next customer. */
-        if (!(is_queue_empty(q)))
-        {
-            fulfil_customer(q, num_service_points, service_points);
-        }
+            /* Checks if service points are available for the next customer. */
+            if (!(is_queue_empty(q)))
+            {
+                fulfil_customer(q, num_service_points, service_points);
+            }
 
-        /* Updates the time waited of every customer in the queue. */
-        increment_waiting_times(q);
-        num_timed_out = leave_queue_early(q, num_timed_out);
+            /* Updates the time waited of every customer in the queue. */
+            increment_waiting_times(q);
+            num_timed_out = leave_queue_early(q, num_timed_out);
 
-        time_slice++;
+            time_slice++;
 
-        /* Checks if it can close the entire branch and stop the simulation. */
-        if (time_slice > closing_time && is_branch_empty(q, num_service_points,
-                                                         service_points))
-        {
-            closed = 1;
+            /* Checks if it can close the entire branch and stop the simulation. */
+            if (time_slice > closing_time && is_branch_empty(q, num_service_points,
+                                                            service_points))
+            {
+                closed = 1;
+                free(q);
+            }
         }
     }
-    print_queue(q);
+
     printf("\nNumber of Customers: %d\n   Customers Fulfilled: %d\n   "
            "Customers Unfulfilled: %d\n   Customers Timed Out: %d",
            num_customers, num_fulfilled, num_unfulfilled, num_timed_out);
 
     free(service_points);
-    free(q);
     return EXIT_SUCCESS;
 }
 

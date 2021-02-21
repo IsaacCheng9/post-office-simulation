@@ -1,4 +1,4 @@
-/* Queue implementation as a linked list. */
+/* Simulation of the queuing system in a Post Office branch. */
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 /* Node structure using a linked list. */
 struct node
 {
-    int hours, time_waited, tolerance;
+    int mins, time_waited, tolerance;
     struct node *next;
 };
 typedef struct node NODE;
@@ -29,11 +29,12 @@ int is_queue_empty(QUEUE *);
 void increment_waiting_times(QUEUE *);
 void enqueue(QUEUE *, int);
 int dequeue(QUEUE *);
-void fulfil_customer(QUEUE *, int, int *);
+int fulfil_customer(QUEUE *, int, int *, int);
 int serve_customers(int, int, int *);
 int leave_queue_early(QUEUE *, int);
 int is_branch_empty(QUEUE *, int, int *);
 void print_queue(QUEUE *);
+void calculate_statistics(int, int, int, int, int, int, int);
 
 /* Main function */
 int main(int argc, char **argv)
@@ -51,10 +52,13 @@ int main(int argc, char **argv)
     int simulation;
     int num_customers = 0;
     int num_fulfilled = 0;
+    int fulfilled_wait_time = 0;
     int num_unfulfilled = 0;
     int num_timed_out = 0;
+    int time_after_closing = 0;
     int time_slice;
     int closed = 0;
+
     /* Seeds for randomness. */
     srand(time(0));
 
@@ -66,7 +70,7 @@ int main(int argc, char **argv)
     {
         /* Performs the simulation(s). */
         QUEUE *q = create_empty_queue(max_queue_length);
-        printf("\nStarting simulation #%d.\n", simulation);
+        printf("\nStarting simulation #%d:\n", simulation);
         time_slice = 1;
         closed = 0;
         while (closed == 0)
@@ -77,11 +81,11 @@ int main(int argc, char **argv)
             if (time_slice <= closing_time)
             {
                 float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
-                int new_hours = (int)new_cust_chance;
+                int new_mins = (int)new_cust_chance;
                 if (new_cust_chance >= 5.0)
                 {
                     num_customers++;
-                    printf("   New Hours: %d\n", new_hours);
+                    printf("   New Mins: %d\n", new_mins);
                     /* Marks the customer as unfulfilled if queue is full. */
                     if (q->queue_length == max_queue_length)
                     {
@@ -91,10 +95,10 @@ int main(int argc, char **argv)
                     /* Adds customer to the queue if there is space. */
                     else
                     {
-                        enqueue(q, new_hours);
-                        printf("   Customer added to queue. Queue length is now %d"
-                            ".\n",
-                            q->queue_length);
+                        enqueue(q, new_mins);
+                        printf("   Customer added to queue. Queue length is "
+                               "now %d.\n",
+                               q->queue_length);
                     }
                 }
             }
@@ -106,28 +110,30 @@ int main(int argc, char **argv)
             /* Checks if service points are available for the next customer. */
             if (!(is_queue_empty(q)))
             {
-                fulfil_customer(q, num_service_points, service_points);
+                fulfilled_wait_time = fulfil_customer(q, num_service_points,
+                                                      service_points,
+                                                      fulfilled_wait_time);
             }
 
             /* Updates the time waited of every customer in the queue. */
             increment_waiting_times(q);
             num_timed_out = leave_queue_early(q, num_timed_out);
 
+            /* Stops the simulation. */
             time_slice++;
-
-            /* Checks if it can close the entire branch and stop the simulation. */
-            if (time_slice > closing_time && is_branch_empty(q, num_service_points,
-                                                            service_points))
+            if (time_slice > closing_time &&
+                is_branch_empty(q, num_service_points, service_points))
             {
+                time_after_closing += time_slice - closing_time - 1;
                 closed = 1;
                 free(q);
             }
         }
     }
 
-    printf("\nNumber of Customers: %d\n   Customers Fulfilled: %d\n   "
-           "Customers Unfulfilled: %d\n   Customers Timed Out: %d",
-           num_customers, num_fulfilled, num_unfulfilled, num_timed_out);
+    calculate_statistics(num_simulations, num_customers, num_fulfilled,
+                         fulfilled_wait_time, num_unfulfilled, num_timed_out,
+                         time_after_closing);
 
     free(service_points);
     return EXIT_SUCCESS;
@@ -166,9 +172,9 @@ NODE *create_new_node(int value)
         exit(EXIT_FAILURE);
     }
 
-    customer->hours = (int) 10.0 * (float)rand() / RAND_MAX;
+    customer->mins = (int)10.0 * (float)rand() / RAND_MAX;
     customer->time_waited = 0;
-    customer->tolerance = (int) 10.0 * (float)rand() / RAND_MAX;
+    customer->tolerance = (int)10.0 * (float)rand() / RAND_MAX;
     customer->next = NULL;
 
     return customer;
@@ -214,7 +220,7 @@ void increment_waiting_times(QUEUE *q)
 /* Adds a value onto the end of the queue and increases queue count. */
 void enqueue(QUEUE *q, int value)
 {
-    /* Creates a new node and its hours and next node pointer. */
+    /* Creates a new node and its mins and next node pointer. */
     NODE *customer = create_new_node(value);
 
     /* Points front and rear of the queue to the new node if empty. Otherwise,
@@ -246,8 +252,8 @@ int dequeue(QUEUE *q)
     /* Gets the previous front of the queue. */
     NODE *customer = q->front;
 
-    /* Stores the hours from the customer, and moves the next customer up. */
-    int hours = customer->hours;
+    /* Stores the mins from the customer, and moves the next customer up. */
+    int mins = customer->mins;
     q->front = q->front->next;
 
     /* If this makes the front empty, make the rear empty, as this means the
@@ -259,11 +265,12 @@ int dequeue(QUEUE *q)
 
     free(customer);
     q->queue_length--;
-    return hours;
+    return mins;
 }
 
 /* Attempts to service the customer at the front of the queue. */
-void fulfil_customer(QUEUE *q, int num_service_points, int *service_points)
+int fulfil_customer(QUEUE *q, int num_service_points, int *service_points,
+                    int fulfilled_wait_time)
 {
     /* Takes the customer from the front of the queue. */
     NODE *customer = q->front;
@@ -274,19 +281,23 @@ void fulfil_customer(QUEUE *q, int num_service_points, int *service_points)
     {
         if (service_points[point] == 0)
         {
-            service_points[point] = customer->hours;
+            service_points[point] = customer->mins;
+            fulfilled_wait_time += customer->time_waited;
             dequeue(q);
             printf("   Fulfilled customer! Queue length is now %d.\n",
                    q->queue_length);
-            return;
+            return fulfilled_wait_time;
         }
     }
 
+    /* All service points may be in use. */
     printf("   No service points free!\n");
+    return fulfilled_wait_time;
 }
 
 /* Processes customers being served for that time slice. */
-int serve_customers(int num_fulfilled, int num_service_points, int *service_points)
+int serve_customers(int num_fulfilled, int num_service_points,
+                    int *service_points)
 {
     /* Iterates to check for service points which are being used. */
     int point;
@@ -358,15 +369,16 @@ void print_queue(QUEUE *q)
     /* Iterates to print the details of each customer in the queue. */
     while (customer != NULL)
     {
-        printf("\nQueue Node: %d\n   Hours: %d\n   Time Waited: %d\n   "
+        printf("\nQueue Node: %d\n   Mins: %d\n   Time Waited: %d\n   "
                "Tolerance: %d\n   Pointer: %p\n   Next Pointer: %p\n",
-               iterator, customer->hours, customer->time_waited,
+               iterator, customer->mins, customer->time_waited,
                customer->tolerance, customer, customer->next);
         customer = customer->next;
         iterator += 1;
     }
 }
 
+/* Checks if it can close the entire branch so it can stop the simulation. */
 int is_branch_empty(QUEUE *q, int num_service_points, int *service_points)
 {
     /* Queue must be empty for the branch to be empty. */
@@ -385,4 +397,24 @@ int is_branch_empty(QUEUE *q, int num_service_points, int *service_points)
         /* Branch is empty if the queue and all service points are empty. */
         return 1;
     }
+}
+
+/* Calculates and prints statistics about the simulations. */
+void calculate_statistics(int num_simulations, int num_customers,
+                          int num_fulfilled, int fulfilled_wait_time,
+                          int num_unfulfilled, int num_timed_out,
+                          int time_after_closing)
+{
+    printf("\n\nNumber of Simulations: %d\n\nNumber of Customers: %d\n   "
+           "Customers Fulfilled: %d\n   Customers Unfulfilled: %d\n   "
+           "Customers Timed Out: %d\n\nAverage Number of Customers Fulfilled: "
+           "%f\n   Average Fulfilled Customer Wait Time: %f\nAverage Number "
+           "of Customers Unfulfilled: %f\nAverage Number of Customers Timed "
+           "Out: %f\nAverage Time After Closing: %f",
+           num_simulations, num_customers, num_fulfilled, num_unfulfilled,
+           num_timed_out, (float)num_fulfilled / num_simulations,
+           (float)fulfilled_wait_time / num_fulfilled,
+           (float)num_unfulfilled / num_simulations,
+           (float)num_timed_out / num_simulations,
+           (float)time_after_closing / num_simulations);
 }

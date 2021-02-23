@@ -22,6 +22,7 @@ struct queue
 typedef struct queue QUEUE;
 
 /* Function prototypes */
+int *read_parameter_file(char *);
 int *create_service_points(int);
 NODE *create_new_node(int);
 QUEUE *create_empty_queue(int);
@@ -34,19 +35,27 @@ int serve_customers(int, int, int *);
 int leave_queue_early(QUEUE *, int);
 int is_branch_empty(QUEUE *, int, int *);
 void print_queue(QUEUE *);
-void calculate_statistics(int, int, int, int, int, int, int);
+void calculate_statistics(int, int, int, int, int, int, int, int, int, int);
 
 /* Main function */
 int main(int argc, char **argv)
 {
+    /* Takes the configuration from the parameters. */
+    char *input_file = argv[1];
+    int num_simulations = atoi(argv[2]);
+    char *output_file = argv[3];
+    int *parameters = (int *)read_parameter_file(input_file);
+
     /* Configuration variables. */
-    /* int max_queue_length = atoi(argv[1]);
-    int num_service_points = atoi(argv[2]);
-    int closing_time = atoi(argv[3]); */
+    int max_queue_length = parameters[0];
+    int num_service_points = parameters[1];
+    int closing_time = parameters[2];
+
+    /*
     int max_queue_length = 2;
     int num_service_points = 2;
     int closing_time = 10;
-    int num_simulations = 5;
+    int num_simulations = 5; */
 
     /* Variables for the running/output of the simulations. */
     int simulation;
@@ -131,7 +140,8 @@ int main(int argc, char **argv)
         }
     }
 
-    calculate_statistics(num_simulations, num_customers, num_fulfilled,
+    calculate_statistics(num_simulations, max_queue_length, num_service_points,
+                         closing_time, num_customers, num_fulfilled,
                          fulfilled_wait_time, num_unfulfilled, num_timed_out,
                          time_after_closing);
 
@@ -140,6 +150,39 @@ int main(int argc, char **argv)
 }
 
 /* Other functions */
+
+/* Reads a file to get parameters for the simulation. */
+int *read_parameter_file(char *input_file)
+{
+    FILE *fp;
+
+    /* Allocates memory to store the parameters. */
+    int *parameters = NULL;
+    if (!(parameters = (int *)malloc(3 * sizeof(int))))
+    {
+        fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    };
+
+    /* Opens the parameter file to read from it. */
+    if ((fp = fopen(input_file, "r")) == NULL)
+    {
+        printf("Unable to open file for read access.\n");
+        fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    /* Searches for the parameters in the text file. */
+    fscanf(fp, "\nmaxQueueLength %d", &parameters[0]);
+    fscanf(fp, "\nnumServicePoints %d", &parameters[1]);
+    fscanf(fp, "\nclosingTime %d", &parameters[2]);
+
+    printf("Parameter 0: %d\nParameter 1: %d\nParameter 2: %d\n",
+           parameters[0], parameters[1], parameters[2]);
+
+    fclose(fp);
+    return parameters;
+}
 
 /* Creates the empty service points to start with. */
 int *create_service_points(int num_service_points)
@@ -400,19 +443,23 @@ int is_branch_empty(QUEUE *q, int num_service_points, int *service_points)
 }
 
 /* Calculates and prints statistics about the simulations. */
-void calculate_statistics(int num_simulations, int num_customers,
-                          int num_fulfilled, int fulfilled_wait_time,
-                          int num_unfulfilled, int num_timed_out,
-                          int time_after_closing)
+void calculate_statistics(int num_simulations, int max_queue_length,
+                          int num_service_points, int closing_time,
+                          int num_customers, int num_fulfilled,
+                          int fulfilled_wait_time, int num_unfulfilled,
+                          int num_timed_out, int time_after_closing)
 {
-    printf("\n\nNumber of Simulations: %d\n\nNumber of Customers: %d\n   "
-           "Customers Fulfilled: %d\n   Customers Unfulfilled: %d\n   "
-           "Customers Timed Out: %d\n\nAverage Number of Customers Fulfilled: "
-           "%f\n   Average Fulfilled Customer Wait Time: %f\nAverage Number "
+    printf("\n\nNumber of Simulations: %d\n   Max Queue Length: %d\n   "
+           "Number of Service Points: %d\n   Closing Time: %d\n\n"
+           "Number of Customers: %d\n   Customers Fulfilled: %d\n   "
+           "Customers Unfulfilled: %d\n   Customers Timed Out: %d\n\n"
+           "Average Number of Customers Fulfilled: %f\n"
+           "   Average Fulfilled Customer Wait Time: %f\nAverage Number "
            "of Customers Unfulfilled: %f\nAverage Number of Customers Timed "
            "Out: %f\nAverage Time After Closing: %f",
-           num_simulations, num_customers, num_fulfilled, num_unfulfilled,
-           num_timed_out, (float)num_fulfilled / num_simulations,
+           num_simulations, max_queue_length, num_service_points, closing_time,
+           num_customers, num_fulfilled, num_unfulfilled, num_timed_out,
+           (float)num_fulfilled / num_simulations,
            (float)fulfilled_wait_time / num_fulfilled,
            (float)num_unfulfilled / num_simulations,
            (float)num_timed_out / num_simulations,

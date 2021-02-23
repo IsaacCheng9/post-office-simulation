@@ -26,6 +26,7 @@ int *read_parameter_file(char *);
 int *create_service_points(int);
 NODE *create_new_node(int);
 QUEUE *create_empty_queue(int);
+int count_busy_service_points(int, int *);
 int is_queue_empty(QUEUE *);
 void increment_waiting_times(QUEUE *);
 void enqueue(QUEUE *, int);
@@ -35,35 +36,30 @@ int serve_customers(int, int, int *);
 int leave_queue_early(QUEUE *, int);
 int is_branch_empty(QUEUE *, int, int *);
 void print_queue(QUEUE *);
-void calculate_statistics(int, int, int, int, int, int, int, int, int, int);
+void output_interval_record(char *, int, int, int, int, int, int, int);
+void output_results_mult(char *, int, int, int, int, int, int, int, int, int, int);
 
 /* Main function */
 int main(int argc, char **argv)
 {
     /* Takes the configuration from the parameters. */
-    char *input_file = argv[1];
+    char *input_parameters = argv[1];
     int num_simulations = atoi(argv[2]);
-    char *output_file = argv[3];
-    int *parameters = (int *)read_parameter_file(input_file);
+    char *results_file = argv[3];
+    int *parameters = (int *)read_parameter_file(input_parameters);
 
     /* Configuration variables. */
     int max_queue_length = parameters[0];
     int num_service_points = parameters[1];
     int closing_time = parameters[2];
 
-    /*
-    int max_queue_length = 2;
-    int num_service_points = 2;
-    int closing_time = 10;
-    int num_simulations = 5; */
-
     /* Variables for the running/output of the simulations. */
     int simulation;
     int num_customers = 0;
     int num_fulfilled = 0;
-    int fulfilled_wait_time = 0;
     int num_unfulfilled = 0;
     int num_timed_out = 0;
+    int fulfilled_wait_time = 0;
     int time_after_closing = 0;
     int time_slice;
     int closed = 0;
@@ -75,12 +71,12 @@ int main(int argc, char **argv)
     int *service_points = (int *)create_service_points(num_service_points);
     printf("Number of Service Points: %d\n", num_service_points);
 
-    for (simulation = 1; simulation <= num_simulations; simulation++)
+    for (simulation = 0; simulation < num_simulations; simulation++)
     {
         /* Performs the simulation(s). */
         QUEUE *q = create_empty_queue(max_queue_length);
         printf("\nStarting simulation #%d:\n", simulation);
-        time_slice = 1;
+        time_slice = 0;
         closed = 0;
         while (closed == 0)
         {
@@ -128,6 +124,17 @@ int main(int argc, char **argv)
             increment_waiting_times(q);
             num_timed_out = leave_queue_early(q, num_timed_out);
 
+            /* Displays a record for each time interval. */
+            if (num_simulations == 1)
+            {
+                int num_being_served = count_busy_service_points(
+                    num_service_points, service_points);
+                output_interval_record(results_file, time_slice, closing_time,
+                                       num_being_served, q->queue_length,
+                                       num_fulfilled, num_unfulfilled,
+                                       num_timed_out);
+            }
+
             /* Stops the simulation. */
             time_slice++;
             if (time_slice > closing_time &&
@@ -140,10 +147,15 @@ int main(int argc, char **argv)
         }
     }
 
-    calculate_statistics(num_simulations, max_queue_length, num_service_points,
-                         closing_time, num_customers, num_fulfilled,
-                         fulfilled_wait_time, num_unfulfilled, num_timed_out,
-                         time_after_closing);
+    /* Outputs to the results file for multiple simulations. */
+    if (num_simulations > 1)
+    {
+        output_results_mult(results_file, num_simulations, max_queue_length,
+                            num_service_points, closing_time, num_customers,
+                            num_fulfilled, fulfilled_wait_time,
+                            num_unfulfilled, num_timed_out,
+                            time_after_closing);
+    }
 
     free(service_points);
     return EXIT_SUCCESS;
@@ -152,7 +164,7 @@ int main(int argc, char **argv)
 /* Other functions */
 
 /* Reads a file to get parameters for the simulation. */
-int *read_parameter_file(char *input_file)
+int *read_parameter_file(char *input_parameters)
 {
     FILE *fp;
 
@@ -165,12 +177,21 @@ int *read_parameter_file(char *input_file)
     };
 
     /* Opens the parameter file to read from it. */
-    if ((fp = fopen(input_file, "r")) == NULL)
+    if ((fp = fopen(input_parameters, "r")) == NULL)
     {
         printf("Unable to open file for read access.\n");
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
+
+    /* char *line_buf = NULL;
+    size_t line_buf_size = 0;
+    int line_count = 0;
+    size_t line_size = getline(&line_buf, &line_buf_size, fp);
+    while (line_size >= 0)
+    {
+        line_count++;
+    } */
 
     /* Searches for the parameters in the text file. */
     fscanf(fp, "\nmaxQueueLength %d", &parameters[0]);
@@ -244,6 +265,24 @@ QUEUE *create_empty_queue(int max_queue_length)
 int is_queue_empty(QUEUE *q)
 {
     return (q->rear == NULL);
+}
+
+/* Counts the number of people being served in the service points. */
+int count_busy_service_points(int num_service_points, int *service_points)
+{
+    int num_being_served = 0;
+
+    /* Iterates to check for service points which are being used. */
+    int point;
+    for (point = 0; point < num_service_points; point++)
+    {
+        if (service_points[point] != 0)
+        {
+            num_being_served++;
+        }
+    }
+
+    return num_being_served;
 }
 
 /* Increments the waiting times of all people in the queue. */
@@ -442,26 +481,80 @@ int is_branch_empty(QUEUE *q, int num_service_points, int *service_points)
     }
 }
 
-/* Calculates and prints statistics about the simulations. */
-void calculate_statistics(int num_simulations, int max_queue_length,
-                          int num_service_points, int closing_time,
-                          int num_customers, int num_fulfilled,
-                          int fulfilled_wait_time, int num_unfulfilled,
-                          int num_timed_out, int time_after_closing)
+/* Outputs live information about the simulation for a given time interval. */
+void output_interval_record(char *results_file, int time_slice,
+                            int closing_time, int num_being_served,
+                            int queue_length, int num_fulfilled,
+                            int num_unfulfilled, int num_timed_out)
 {
-    printf("\n\nNumber of Simulations: %d\n   Max Queue Length: %d\n   "
-           "Number of Service Points: %d\n   Closing Time: %d\n\n"
-           "Number of Customers: %d\n   Customers Fulfilled: %d\n   "
-           "Customers Unfulfilled: %d\n   Customers Timed Out: %d\n\n"
-           "Average Number of Customers Fulfilled: %f\n"
-           "   Average Fulfilled Customer Wait Time: %f\nAverage Number "
-           "of Customers Unfulfilled: %f\nAverage Number of Customers Timed "
-           "Out: %f\nAverage Time After Closing: %f",
-           num_simulations, max_queue_length, num_service_points, closing_time,
-           num_customers, num_fulfilled, num_unfulfilled, num_timed_out,
-           (float)num_fulfilled / num_simulations,
-           (float)fulfilled_wait_time / num_fulfilled,
-           (float)num_unfulfilled / num_simulations,
-           (float)num_timed_out / num_simulations,
-           (float)time_after_closing / num_simulations);
+    FILE *fp;
+
+    /* Opens file in write mode to overwrite old contents. */
+    if (time_slice == 0)
+    {
+        /* Error handling for opening the file in write mode. */
+        if ((fp = fopen(results_file, "w+")) == NULL)
+        {
+            printf("Unable to open file for write access.\n");
+            fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+            exit(1);
+        }
+    }
+    else
+    {
+        /* Error handling for opening the file in append mode. */
+        if ((fp = fopen(results_file, "a")) == NULL)
+        {
+            printf("Unable to open file for append access.\n");
+            fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+            exit(1);
+        }
+    }
+
+    fprintf(fp, "Time Slice: %d\n   Number of Customers Currently Being "
+                "Served: %d\n   Number of People Currently in the Queue: "
+                "%d\n   Number of Fulfilled Customers: %d\n   Number of "
+                "Unfilfilled Customers: %d\n   Number of Timed Out "
+                "Customers: %d\n\n",
+            time_slice, num_being_served, queue_length,
+            num_fulfilled, num_unfulfilled, num_timed_out);
+
+    if (time_slice == closing_time)
+    {
+        fprintf(fp, "Closing time has been reached!\n\n");
+    }
+}
+
+/* Outputs statistics about averages in a file for multiple simulations. */
+void output_results_mult(char *results_file, int num_simulations, int max_queue_length,
+                         int num_service_points, int closing_time,
+                         int num_customers, int num_fulfilled,
+                         int fulfilled_wait_time, int num_unfulfilled,
+                         int num_timed_out, int time_after_closing)
+{
+    FILE *fp;
+
+    /* Error handling for opening the file in write mode. */
+    if ((fp = fopen(results_file, "w+")) == NULL)
+    {
+        printf("Unable to open file for write access.\n");
+        fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+        exit(1);
+    }
+
+    fprintf(fp, "Number of Simulations: %d\n\nParameters Read From Input "
+                "File:\n   Max Queue Length: %d\n   "
+                "Number of Service Points: %d\n   Closing Time: %d\n\n"
+                "Average Number of Customers Fulfilled: %f\n"
+                "Average Number of Customers Unfulfilled: %f\n"
+                "Average Number of Customers Timed Out: %f\n"
+                "Average Waiting Time for Fulfilled Customers: %f\n"
+                "Average Time After Closing to Finish Serving Remaining "
+                "Customers: %f",
+            num_simulations, max_queue_length, num_service_points,
+            closing_time, (float)num_fulfilled / num_simulations,
+            (float)num_unfulfilled / num_simulations,
+            (float)num_timed_out / num_simulations,
+            (float)fulfilled_wait_time / num_fulfilled,
+            (float)time_after_closing / num_simulations);
 }

@@ -98,7 +98,8 @@ int main(int argc, char **argv)
                     if (q->queue_length == max_queue_length)
                     {
                         num_unfulfilled++;
-                        printf("   Customer unfulfilled; queue is full.\n");
+                        printf("   Customer left unfulfilled; queue is "
+                               "full.\n");
                     }
                     /* Adds customer to the queue if there is space. */
                     else
@@ -153,8 +154,8 @@ int main(int argc, char **argv)
     /* Outputs to the results file for multiple simulations. */
     if (num_simulations == 1)
     {
-        output_results_sing(results_file, num_fulfilled, fulfilled_wait_time,
-                            time_after_closing);
+        output_results_sing(results_file, time_after_closing, num_fulfilled,
+                            fulfilled_wait_time);
     }
     /* Outputs to the results file for multiple simulations. */
     else if (num_simulations > 1)
@@ -429,8 +430,9 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
 
             num_timed_out++;
             q->queue_length--;
-            printf("   Customer has waited too long, and has left the queue "
-                   "early after %d minutes. Queue length is now %d.\n",
+            printf("   Customer has timed out. They waited too long, and left "
+                   "the queue early after %d minutes. Queue length is now "
+                   "%d.\n",
                    customer->time_waited, q->queue_length);
         }
         customer = customer->next;
@@ -530,8 +532,8 @@ void output_interval_record(char *results_file, int time_slice,
 }
 
 /* Outputs statistics about averages in a file for a single simulation. */
-void output_results_sing(char *results_file, int num_fulfilled,
-                         int fulfilled_wait_time, int time_after_closing)
+void output_results_sing(char *results_file, int time_after_closing,
+                         int num_fulfilled, int fulfilled_wait_time)
 {
     FILE *fp;
 

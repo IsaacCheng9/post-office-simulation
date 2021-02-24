@@ -24,12 +24,12 @@ typedef struct queue QUEUE;
 /* Function prototypes */
 int *read_parameter_file(char *);
 int *create_service_points(int);
-NODE *create_new_node(int);
+NODE *create_new_node();
 QUEUE *create_empty_queue(int);
 int count_busy_service_points(int, int *);
 int is_queue_empty(QUEUE *);
 void increment_waiting_times(QUEUE *);
-void enqueue(QUEUE *, int);
+void enqueue(QUEUE *);
 int dequeue(QUEUE *);
 int fulfil_customer(QUEUE *, int, int *, int);
 int serve_customers(int, int, int *);
@@ -75,7 +75,6 @@ int main(int argc, char **argv)
 
     /* Creates service points and displays them at the start. */
     int *service_points = (int *)create_service_points(num_service_points);
-    printf("Number of Service Points: %d\n", num_service_points);
 
     for (simulation = 0; simulation < num_simulations; simulation++)
     {
@@ -86,17 +85,15 @@ int main(int argc, char **argv)
         closed = 0;
         while (closed == 0)
         {
-            printf("Time Slice: %d\n", time_slice);
+            printf("\nTime Slice: %d\n", time_slice);
 
             /* Adds new customers to the queue if not past closing time. */
             if (time_slice <= closing_time)
             {
                 float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
-                int new_mins = (int)new_cust_chance;
                 if (new_cust_chance >= 5.0)
                 {
                     num_customers++;
-                    printf("   New Mins: %d\n", new_mins);
                     /* Marks the customer as unfulfilled if queue is full. */
                     if (q->queue_length == max_queue_length)
                     {
@@ -106,7 +103,7 @@ int main(int argc, char **argv)
                     /* Adds customer to the queue if there is space. */
                     else
                     {
-                        enqueue(q, new_mins);
+                        enqueue(q);
                         printf("   Customer added to queue. Queue length is "
                                "now %d.\n",
                                q->queue_length);
@@ -168,6 +165,7 @@ int main(int argc, char **argv)
                             time_after_closing);
     }
 
+    free(parameters);
     free(service_points);
     return EXIT_SUCCESS;
 }
@@ -195,22 +193,10 @@ int *read_parameter_file(char *input_parameters)
         exit(EXIT_FAILURE);
     }
 
-    /* char *line_buf = NULL;
-    size_t line_buf_size = 0;
-    int line_count = 0;
-    size_t line_size = getline(&line_buf, &line_buf_size, fp);
-    while (line_size >= 0)
-    {
-        line_count++;
-    } */
-
     /* Searches for the parameters in the text file. */
     fscanf(fp, "\nmaxQueueLength %d", &parameters[0]);
     fscanf(fp, "\nnumServicePoints %d", &parameters[1]);
     fscanf(fp, "\nclosingTime %d", &parameters[2]);
-
-    printf("Parameter 0: %d\nParameter 1: %d\nParameter 2: %d\n",
-           parameters[0], parameters[1], parameters[2]);
 
     fclose(fp);
     return parameters;
@@ -238,7 +224,7 @@ int *create_service_points(int num_service_points)
 }
 
 /* Creates a new linked list node to represent a customer. */
-NODE *create_new_node(int value)
+NODE *create_new_node()
 {
     NODE *customer = (NODE *)malloc(sizeof(NODE));
     if (customer == NULL)
@@ -311,10 +297,10 @@ void increment_waiting_times(QUEUE *q)
 }
 
 /* Adds a value onto the end of the queue and increases queue count. */
-void enqueue(QUEUE *q, int value)
+void enqueue(QUEUE *q)
 {
     /* Creates a new node and its mins and next node pointer. */
-    NODE *customer = create_new_node(value);
+    NODE *customer = create_new_node();
 
     /* Points front and rear of the queue to the new node if empty. Otherwise,
     points the previous rear of the node to this node, and sets the new node as
@@ -376,9 +362,11 @@ int fulfil_customer(QUEUE *q, int num_service_points, int *service_points,
         {
             service_points[point] = customer->mins;
             fulfilled_wait_time += customer->time_waited;
+            printf("   Fulfilled customer! They spent %d minutes waiting in "
+                   "the queue. Their task will take %d minutes. Queue length "
+                   "is now %d.\n",
+                   customer->time_waited, customer->mins, q->queue_length - 1);
             dequeue(q);
-            printf("   Fulfilled customer! Queue length is now %d.\n",
-                   q->queue_length);
             return fulfilled_wait_time;
         }
     }
@@ -442,8 +430,8 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
             num_timed_out++;
             q->queue_length--;
             printf("   Customer has waited too long, and has left the queue "
-                   "early. Queue length is now %d.\n",
-                   q->queue_length);
+                   "early after %d minutes. Queue length is now %d.\n",
+                   customer->time_waited, q->queue_length);
         }
         customer = customer->next;
     }
@@ -530,7 +518,7 @@ void output_interval_record(char *results_file, int time_slice,
     fprintf(fp, "Time Slice: %d\n   Number of Customers Currently Being "
                 "Served: %d\n   Number of People Currently in the Queue: "
                 "%d\n   Number of Fulfilled Customers: %d\n   Number of "
-                "Unfilfilled Customers: %d\n   Number of Timed Out "
+                "Unfulfilled Customers: %d\n   Number of Timed Out "
                 "Customers: %d\n\n",
             time_slice, num_being_served, queue_length,
             num_fulfilled, num_unfulfilled, num_timed_out);
@@ -556,7 +544,7 @@ void output_results_sing(char *results_file, int num_fulfilled,
     }
 
     fprintf(fp, "Time After Closing to Finish Serving Remaining Customers: "
-                "%d\nAverage Waiting Time for Fulfilled Customers: %f\n",
+                "%d\nAverage Waiting Time of Fulfilled Customers: %f\n",
             time_after_closing,
             (float)fulfilled_wait_time / num_fulfilled);
 }
@@ -580,7 +568,7 @@ void output_results_mult(char *results_file, int num_simulations, int num_custom
     fprintf(fp, "Average Number of Customers Fulfilled: %f\n"
                 "Average Number of Customers Unfulfilled: %f\n"
                 "Average Number of Customers Timed Out: %f\n"
-                "Average Waiting Time for Fulfilled Customers: %f\n"
+                "Average Waiting Time of Fulfilled Customers: %f\n"
                 "Average Time After Closing to Finish Serving Remaining "
                 "Customers: %f",
             (float)num_fulfilled / num_simulations,

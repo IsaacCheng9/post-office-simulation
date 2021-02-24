@@ -41,7 +41,8 @@ int serve_customers(int, int, int *);
 int leave_queue_early(QUEUE *, int);
 int is_branch_empty(QUEUE *, int, int *);
 void print_queue(QUEUE *);
-void output_parameters(char *, int, int, int, float, float, float, float);
+void output_parameters(char *, int, int, int, float, float, float, float,
+                       float);
 void output_interval_record(char *, int, int, int, int, int, int, int);
 void output_results_sing(char *, int, int, int);
 void output_results_mult(char *, int, int, int, int, int, int, int);
@@ -95,8 +96,8 @@ int main(int argc, char **argv)
 
     /* Outputs parameter values. */
     output_parameters(results_file, max_queue_length, num_service_points,
-                      closing_time, mean_mins, std_dev_mins, mean_tolerance,
-                      std_dev_tolerance);
+                      closing_time, avg_customer_rate, mean_mins, std_dev_mins,
+                      mean_tolerance, std_dev_tolerance);
 
     /* Seeds for randomness. */
     srand(time(0));
@@ -535,8 +536,9 @@ int is_branch_empty(QUEUE *q, int num_service_points, int *service_points)
 /* Outputs list of parameter values read from the input file. */
 void output_parameters(char *results_file, int max_queue_length,
                        int num_service_points, int closing_time,
-                       float mean_mins, float std_dev_mins,
-                       float mean_tolerance, float std_dev_tolerance)
+                       float avg_customer_rate, float mean_mins,
+                       float std_dev_mins, float mean_tolerance,
+                       float std_dev_tolerance)
 {
     FILE *fp;
 
@@ -550,11 +552,13 @@ void output_parameters(char *results_file, int max_queue_length,
 
     fprintf(fp, "Parameters Read From Input File:\n   Max Queue Length: "
                 "%d\n   Number of Service Points: %d\n   Closing Time: %d\n"
-                "   Mean of Task Length: %f\n   Standard Deviation of Task "
-                "Length: %f\n   Mean of Customer Tolerance: %f\n   "
-                "Standard Deviation of Customer Tolerance: %f\n\n",
-            max_queue_length, num_service_points, closing_time, mean_mins,
-            std_dev_mins, mean_tolerance, std_dev_tolerance);
+                "   Average Customers Per Interval: %f\n   Mean of Task "
+                "Length: %f\n   Standard Deviation of Task Length: %f\n   "
+                "Mean of Customer Tolerance: %f\n   Standard Deviation of "
+                "Customer Tolerance: %f\n\n",
+            max_queue_length, num_service_points, closing_time,
+            avg_customer_rate, mean_mins, std_dev_mins, mean_tolerance,
+            std_dev_tolerance);
 }
 
 /* Outputs live information about the simulation for a given time interval. */

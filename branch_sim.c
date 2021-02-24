@@ -25,15 +25,15 @@ struct queue
 typedef struct queue QUEUE;
 
 /* Function prototypes */
-int generate_random_gaussian(int, int);
+int generate_random_gaussian(int, int, gsl_rng *);
 float *read_parameter_file(char *);
 int *create_service_points(int);
-CUSTOMER *create_new_customer(int, int, int, int);
+CUSTOMER *create_new_customer(int, int, int, int, gsl_rng *);
 QUEUE *create_empty_queue(int);
 int count_busy_service_points(int, int *);
 int is_queue_empty(QUEUE *);
 void increment_waiting_times(QUEUE *);
-void enqueue(QUEUE *, int, int, int, int);
+void enqueue(QUEUE *, int, int, int, int, gsl_rng *);
 int dequeue(QUEUE *);
 int fulfil_customer(QUEUE *, int, int *, int);
 int serve_customers(int, int, int *);
@@ -48,6 +48,17 @@ void output_results_mult(char *, int, int, int, int, int, int, int);
 /* Main function */
 int main(int argc, char **argv)
 {
+    const gsl_rng_type *T;
+    gsl_rng *r;
+
+    /* Creates a random number generator. */
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc(T);
+
+    /* Seeds the random number generator based on current time. */
+    gsl_rng_set(r, time(0));
+
     /* Takes the configuration from the parameters. */
     char *input_parameters = argv[1];
     int num_simulations = atoi(argv[2]);
@@ -120,7 +131,7 @@ int main(int argc, char **argv)
                     else
                     {
                         enqueue(q, mean_mins, std_dev_mins, mean_tolerance,
-                                std_dev_tolerance);
+                                std_dev_tolerance, r);
                         printf("   Customer added to queue. Queue length is "
                                "now %d.\n",
                                q->queue_length);
@@ -182,6 +193,7 @@ int main(int argc, char **argv)
                             time_after_closing);
     }
 
+    gsl_rng_free(r);
     free(parameters);
     free(service_points);
     return EXIT_SUCCESS;
@@ -190,26 +202,15 @@ int main(int argc, char **argv)
 /* Other functions */
 
 /* Generates a random numberator using Gaussian distribution. */
-int generate_random_gaussian(int mean, int std_dev)
+int generate_random_gaussian(int mean, int std_dev, gsl_rng *r)
 {
     int random = -1;
-    const gsl_rng_type *T;
-    gsl_rng *r;
-
-    /* Creates a random number generator. */
-    gsl_rng_env_setup();
-    T = gsl_rng_default;
-    r = gsl_rng_alloc(T);
-
-    /* Seeds the random number generator based on current time. */
-    gsl_rng_set(r, time(0));
 
     /* Creates a random number >= 0 using the Gaussian distribution based on
     mean and standard deviation. */
     while (random < 0)
         random = gsl_ran_gaussian(r, std_dev) + mean;
 
-    gsl_rng_free(r);
     return random;
 }
 
@@ -270,7 +271,8 @@ int *create_service_points(int num_service_points)
 
 /* Creates a new linked list node to represent a customer. */
 CUSTOMER *create_new_customer(int mean_mins, int std_dev_mins,
-                              int mean_tolerance, int std_dev_tolerance)
+                              int mean_tolerance, int std_dev_tolerance,
+                              gsl_rng *r)
 {
     CUSTOMER *customer = (CUSTOMER *)malloc(sizeof(CUSTOMER));
     if (customer == NULL)
@@ -279,10 +281,10 @@ CUSTOMER *create_new_customer(int mean_mins, int std_dev_mins,
         exit(EXIT_FAILURE);
     }
 
-    customer->mins = generate_random_gaussian(mean_mins, std_dev_mins);
+    customer->mins = generate_random_gaussian(mean_mins, std_dev_mins, r);
     customer->time_waited = 0;
     customer->tolerance = generate_random_gaussian(mean_tolerance,
-                                                   std_dev_tolerance);
+                                                   std_dev_tolerance, r);
     customer->next = NULL;
 
     return customer;
@@ -345,12 +347,12 @@ void increment_waiting_times(QUEUE *q)
 
 /* Adds a value onto the end of the queue and increases queue count. */
 void enqueue(QUEUE *q, int mean_mins, int std_dev_mins, int mean_tolerance,
-             int std_dev_tolerance)
+             int std_dev_tolerance, gsl_rng *r)
 {
     /* Creates a new customer and its mins and next customer pointer. */
     CUSTOMER *customer = create_new_customer(mean_mins, std_dev_mins,
                                              mean_tolerance,
-                                             std_dev_tolerance);
+                                             std_dev_tolerance, r);
 
     /* Points front and rear of the queue to the new customer if empty.
     Otherwise, points the previous rear of the customer to this customer, and

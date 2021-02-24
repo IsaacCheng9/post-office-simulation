@@ -25,6 +25,7 @@ struct queue
 typedef struct queue QUEUE;
 
 /* Function prototypes */
+int generate_random_poisson(float, gsl_rng *);
 int generate_random_gaussian(int, int, gsl_rng *);
 float *read_parameter_file(char *);
 int *create_service_points(int);
@@ -69,10 +70,11 @@ int main(int argc, char **argv)
     int max_queue_length = parameters[0];
     int num_service_points = parameters[1];
     int closing_time = parameters[2];
-    float mean_mins = parameters[3];
-    float std_dev_mins = parameters[4];
-    float mean_tolerance = parameters[5];
-    float std_dev_tolerance = parameters[6];
+    float avg_customer_rate = parameters[3];
+    float mean_mins = parameters[4];
+    float std_dev_mins = parameters[5];
+    float mean_tolerance = parameters[6];
+    float std_dev_tolerance = parameters[7];
 
     /* Removes queue length limit if set to -1. */
     if (max_queue_length == -1)
@@ -116,8 +118,11 @@ int main(int argc, char **argv)
             /* Adds new customers to the queue if not past closing time. */
             if (time_slice <= closing_time)
             {
-                float new_cust_chance = 10.0 * (float)rand() / RAND_MAX;
-                if (new_cust_chance >= 5.0)
+                int new_customer;
+                int num_new_customers = generate_random_poisson(
+                    avg_customer_rate, r);
+                for (new_customer = 0; new_customer < num_new_customers;
+                     new_customer++)
                 {
                     num_customers++;
                     /* Marks the customer as unfulfilled if queue is full. */
@@ -202,6 +207,18 @@ int main(int argc, char **argv)
 /* Other functions */
 
 /* Generates a random numberator using Gaussian distribution. */
+int generate_random_poisson(float avg_customer_rate, gsl_rng *r)
+{
+    int random = -1;
+
+    /* Creates a random number using the Poisson distribution based on
+    the rate parameter. */
+    random = gsl_ran_poisson(r, avg_customer_rate);
+
+    return random;
+}
+
+/* Generates a random numberator using Gaussian distribution. */
 int generate_random_gaussian(int mean, int std_dev, gsl_rng *r)
 {
     int random = -1;
@@ -221,7 +238,7 @@ float *read_parameter_file(char *input_parameters)
 
     /* Allocates memory to store the parameters. */
     float *parameters = NULL;
-    if (!(parameters = (float *)malloc(8 * sizeof(float))))
+    if (!(parameters = (float *)malloc(9 * sizeof(float))))
     {
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
@@ -239,10 +256,11 @@ float *read_parameter_file(char *input_parameters)
     fscanf(fp, "\nmaxQueueLength %f", &parameters[0]);
     fscanf(fp, "\nnumServicePoints %f", &parameters[1]);
     fscanf(fp, "\nclosingTime %f", &parameters[2]);
-    fscanf(fp, "\nmeanMins %f", &parameters[3]);
-    fscanf(fp, "\nstandardDeviationMins %f", &parameters[4]);
-    fscanf(fp, "\nmeanTolerance %f", &parameters[5]);
-    fscanf(fp, "\nstandardDeviationTolerance %f", &parameters[6]);
+    fscanf(fp, "\naverageCustomersPerInterval %f", &parameters[3]);
+    fscanf(fp, "\nmeanMins %f", &parameters[4]);
+    fscanf(fp, "\nstandardDeviationMins %f", &parameters[5]);
+    fscanf(fp, "\nmeanTolerance %f", &parameters[6]);
+    fscanf(fp, "\nstandardDeviationTolerance %f", &parameters[7]);
 
     fclose(fp);
     return parameters;
@@ -491,25 +509,6 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
 
     free(customer);
     return num_timed_out;
-}
-
-/* Displays the full queue, with the details of each person in the queue. */
-void print_queue(QUEUE *q)
-{
-    /* Starts from the front of the queue. */
-    CUSTOMER *customer = q->front;
-    int iterator = 0;
-
-    /* Iterates to print the details of each customer in the queue. */
-    while (customer != NULL)
-    {
-        printf("\nQueue Node: %d\n   Mins: %d\n   Time Waited: %d\n   "
-               "Tolerance: %d\n   Pointer: %p\n   Next Pointer: %p\n",
-               iterator, customer->mins, customer->time_waited,
-               customer->tolerance, customer, customer->next);
-        customer = customer->next;
-        iterator += 1;
-    }
 }
 
 /* Checks if it can close the entire branch so it can stop the simulation. */

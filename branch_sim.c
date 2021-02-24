@@ -1,42 +1,46 @@
 /* Simulation of the queuing system in a Post Office branch. */
 #include <errno.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-/* Node structure using a linked list. */
-struct node
+/* Customer structure using a linked list, acting as a node. */
+struct customer
 {
     int mins, time_waited, tolerance;
-    struct node *next;
+    struct customer *next;
 };
-typedef struct node NODE;
+typedef struct customer CUSTOMER;
 
 /* Queue structure in a linked list, with front and rear pointers. */
 struct queue
 {
-    struct node *front, *rear;
+    struct customer *front, *rear;
     int queue_length, max_queue_length;
 };
 typedef struct queue QUEUE;
 
 /* Function prototypes */
-int *read_parameter_file(char *);
+int generate_random_gaussian(int, int);
+float *read_parameter_file(char *);
 int *create_service_points(int);
-NODE *create_new_node();
+CUSTOMER *create_new_customer(int, int, int, int);
 QUEUE *create_empty_queue(int);
 int count_busy_service_points(int, int *);
 int is_queue_empty(QUEUE *);
 void increment_waiting_times(QUEUE *);
-void enqueue(QUEUE *);
+void enqueue(QUEUE *, int, int, int, int);
 int dequeue(QUEUE *);
 int fulfil_customer(QUEUE *, int, int *, int);
 int serve_customers(int, int, int *);
 int leave_queue_early(QUEUE *, int);
 int is_branch_empty(QUEUE *, int, int *);
 void print_queue(QUEUE *);
-void output_parameters(char *, int, int, int);
+void output_parameters(char *, int, int, int, float, float, float, float);
 void output_interval_record(char *, int, int, int, int, int, int, int);
 void output_results_sing(char *, int, int, int);
 void output_results_mult(char *, int, int, int, int, int, int, int);
@@ -48,12 +52,22 @@ int main(int argc, char **argv)
     char *input_parameters = argv[1];
     int num_simulations = atoi(argv[2]);
     char *results_file = argv[3];
-    int *parameters = (int *)read_parameter_file(input_parameters);
+    float *parameters = (float *)read_parameter_file(input_parameters);
 
-    /* Configuration variables. */
+    /* Configuration variables from the input file. */
     int max_queue_length = parameters[0];
     int num_service_points = parameters[1];
     int closing_time = parameters[2];
+    float mean_mins = parameters[3];
+    float std_dev_mins = parameters[4];
+    float mean_tolerance = parameters[5];
+    float std_dev_tolerance = parameters[6];
+
+    /* Removes queue length limit if set to -1. */
+    if (max_queue_length == -1)
+    {
+        max_queue_length = INT_MAX;
+    }
 
     /* Variables for the running/output of the simulations. */
     int simulation;
@@ -68,7 +82,8 @@ int main(int argc, char **argv)
 
     /* Outputs parameter values. */
     output_parameters(results_file, max_queue_length, num_service_points,
-                      closing_time);
+                      closing_time, mean_mins, std_dev_mins, mean_tolerance,
+                      std_dev_tolerance);
 
     /* Seeds for randomness. */
     srand(time(0));
@@ -104,7 +119,8 @@ int main(int argc, char **argv)
                     /* Adds customer to the queue if there is space. */
                     else
                     {
-                        enqueue(q);
+                        enqueue(q, mean_mins, std_dev_mins, mean_tolerance,
+                                std_dev_tolerance);
                         printf("   Customer added to queue. Queue length is "
                                "now %d.\n",
                                q->queue_length);
@@ -173,14 +189,38 @@ int main(int argc, char **argv)
 
 /* Other functions */
 
+/* Generates a random numberator using Gaussian distribution. */
+int generate_random_gaussian(int mean, int std_dev)
+{
+    int random = -1;
+    const gsl_rng_type *T;
+    gsl_rng *r;
+
+    /* Creates a random number generator. */
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc(T);
+
+    /* Seeds the random number generator based on current time. */
+    gsl_rng_set(r, time(0));
+
+    /* Creates a random number >= 0 using the Gaussian distribution based on
+    mean and standard deviation. */
+    while (random < 0)
+        random = gsl_ran_gaussian(r, std_dev) + mean;
+
+    gsl_rng_free(r);
+    return random;
+}
+
 /* Reads a file to get parameters for the simulation. */
-int *read_parameter_file(char *input_parameters)
+float *read_parameter_file(char *input_parameters)
 {
     FILE *fp;
 
     /* Allocates memory to store the parameters. */
-    int *parameters = NULL;
-    if (!(parameters = (int *)malloc(3 * sizeof(int))))
+    float *parameters = NULL;
+    if (!(parameters = (float *)malloc(8 * sizeof(float))))
     {
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
@@ -195,9 +235,13 @@ int *read_parameter_file(char *input_parameters)
     }
 
     /* Searches for the parameters in the text file. */
-    fscanf(fp, "\nmaxQueueLength %d", &parameters[0]);
-    fscanf(fp, "\nnumServicePoints %d", &parameters[1]);
-    fscanf(fp, "\nclosingTime %d", &parameters[2]);
+    fscanf(fp, "\nmaxQueueLength %f", &parameters[0]);
+    fscanf(fp, "\nnumServicePoints %f", &parameters[1]);
+    fscanf(fp, "\nclosingTime %f", &parameters[2]);
+    fscanf(fp, "\nmeanMins %f", &parameters[3]);
+    fscanf(fp, "\nstandardDeviationMins %f", &parameters[4]);
+    fscanf(fp, "\nmeanTolerance %f", &parameters[5]);
+    fscanf(fp, "\nstandardDeviationTolerance %f", &parameters[6]);
 
     fclose(fp);
     return parameters;
@@ -225,24 +269,26 @@ int *create_service_points(int num_service_points)
 }
 
 /* Creates a new linked list node to represent a customer. */
-NODE *create_new_node()
+CUSTOMER *create_new_customer(int mean_mins, int std_dev_mins,
+                              int mean_tolerance, int std_dev_tolerance)
 {
-    NODE *customer = (NODE *)malloc(sizeof(NODE));
+    CUSTOMER *customer = (CUSTOMER *)malloc(sizeof(CUSTOMER));
     if (customer == NULL)
     {
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    customer->mins = (int)10.0 * (float)rand() / RAND_MAX;
+    customer->mins = generate_random_gaussian(mean_mins, std_dev_mins);
     customer->time_waited = 0;
-    customer->tolerance = (int)10.0 * (float)rand() / RAND_MAX;
+    customer->tolerance = generate_random_gaussian(mean_tolerance,
+                                                   std_dev_tolerance);
     customer->next = NULL;
 
     return customer;
 }
 
-/* Creates an empty queue. */
+/* Creates an empty queue for customers to join. */
 QUEUE *create_empty_queue(int max_queue_length)
 {
     QUEUE *q = (QUEUE *)malloc(sizeof(QUEUE));
@@ -287,7 +333,7 @@ int count_busy_service_points(int num_service_points, int *service_points)
 void increment_waiting_times(QUEUE *q)
 {
     /* Starts from the front of the queue. */
-    NODE *customer = q->front;
+    CUSTOMER *customer = q->front;
 
     /* Iterates to print the details of each customer in the queue. */
     while (customer != NULL)
@@ -298,14 +344,17 @@ void increment_waiting_times(QUEUE *q)
 }
 
 /* Adds a value onto the end of the queue and increases queue count. */
-void enqueue(QUEUE *q)
+void enqueue(QUEUE *q, int mean_mins, int std_dev_mins, int mean_tolerance,
+             int std_dev_tolerance)
 {
-    /* Creates a new node and its mins and next node pointer. */
-    NODE *customer = create_new_node();
+    /* Creates a new customer and its mins and next customer pointer. */
+    CUSTOMER *customer = create_new_customer(mean_mins, std_dev_mins,
+                                             mean_tolerance,
+                                             std_dev_tolerance);
 
-    /* Points front and rear of the queue to the new node if empty. Otherwise,
-    points the previous rear of the node to this node, and sets the new node as
-    the rear. */
+    /* Points front and rear of the queue to the new customer if empty.
+    Otherwise, points the previous rear of the customer to this customer, and
+    sets the new customer as the rear. */
     if (is_queue_empty(q))
     {
         q->front = q->rear = customer;
@@ -330,7 +379,7 @@ int dequeue(QUEUE *q)
     }
 
     /* Gets the previous front of the queue. */
-    NODE *customer = q->front;
+    CUSTOMER *customer = q->front;
 
     /* Stores the mins from the customer, and moves the next customer up. */
     int mins = customer->mins;
@@ -353,7 +402,7 @@ int fulfil_customer(QUEUE *q, int num_service_points, int *service_points,
                     int fulfilled_wait_time)
 {
     /* Takes the customer from the front of the queue. */
-    NODE *customer = q->front;
+    CUSTOMER *customer = q->front;
 
     /* Finds the first service point which is available. */
     int point;
@@ -410,7 +459,7 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
     }
 
     /* Starts from the front of the queue. */
-    NODE *customer = q->front;
+    CUSTOMER *customer = q->front;
 
     /* Iterates to check for customers in the queue who are leaving early. */
     while (customer != NULL)
@@ -446,7 +495,7 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
 void print_queue(QUEUE *q)
 {
     /* Starts from the front of the queue. */
-    NODE *customer = q->front;
+    CUSTOMER *customer = q->front;
     int iterator = 0;
 
     /* Iterates to print the details of each customer in the queue. */
@@ -484,7 +533,9 @@ int is_branch_empty(QUEUE *q, int num_service_points, int *service_points)
 
 /* Outputs list of parameter values read from the input file. */
 void output_parameters(char *results_file, int max_queue_length,
-                       int num_service_points, int closing_time)
+                       int num_service_points, int closing_time,
+                       float mean_mins, float std_dev_mins,
+                       float mean_tolerance, float std_dev_tolerance)
 {
     FILE *fp;
 
@@ -497,8 +548,12 @@ void output_parameters(char *results_file, int max_queue_length,
     }
 
     fprintf(fp, "Parameters Read From Input File:\n   Max Queue Length: "
-                "%d\n   Number of Service Points: %d\n   Closing Time: %d\n\n",
-            max_queue_length, num_service_points, closing_time);
+                "%d\n   Number of Service Points: %d\n   Closing Time: %d\n"
+                "   Mean of Task Length: %f\n   Standard Deviation of Task "
+                "Length: %f\n   Mean of Customer Tolerance: %f\n   "
+                "Standard Deviation of Customer Tolerance: %f\n\n",
+            max_queue_length, num_service_points, closing_time, mean_mins,
+            std_dev_mins, mean_tolerance, std_dev_tolerance);
 }
 
 /* Outputs live information about the simulation for a given time interval. */
@@ -552,10 +607,10 @@ void output_results_sing(char *results_file, int time_after_closing,
 }
 
 /* Outputs statistics about averages in a file for multiple simulations. */
-void output_results_mult(char *results_file, int num_simulations, int num_customers,
-                         int num_fulfilled, int fulfilled_wait_time,
-                         int num_unfulfilled, int num_timed_out,
-                         int time_after_closing)
+void output_results_mult(char *results_file, int num_simulations,
+                         int num_customers, int num_fulfilled,
+                         int fulfilled_wait_time, int num_unfulfilled,
+                         int num_timed_out, int time_after_closing)
 {
     FILE *fp;
 

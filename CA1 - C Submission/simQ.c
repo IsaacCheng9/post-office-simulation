@@ -1,5 +1,5 @@
 /* Simulation of the queuing system in a Post Office branch using linked
- * lists. */
+ *  * lists. */
 #include <simQ.h>
 
 int main(int argc, char **argv)
@@ -84,6 +84,22 @@ int main(int argc, char **argv)
         {
             printf("\nTime Slice: %d\n", time_slice);
 
+            /* Serves customers currently on the service points. */
+            num_fulfilled = serve_customers(num_fulfilled, num_service_points,
+                                            service_points);
+
+            /* Checks if service points are available for the next customer. */
+            if (!(is_queue_empty(q)))
+            {
+                fulfilled_wait_time = fulfil_customer(q, num_service_points,
+                                                      service_points,
+                                                      fulfilled_wait_time);
+            }
+
+            /* Updates the time waited of every customer in the queue. */
+            increment_waiting_times(q);
+            num_timed_out = leave_queue_early(q, num_timed_out);
+
             /* Adds new customers to the queue if not past closing time. */
             if (time_slice <= closing_time)
             {
@@ -113,23 +129,8 @@ int main(int argc, char **argv)
                 }
             }
 
-            /* Serves customers currently on the service points. */
-            num_fulfilled = serve_customers(num_fulfilled, num_service_points,
-                                            service_points);
-
-            /* Checks if service points are available for the next customer. */
-            if (!(is_queue_empty(q)))
-            {
-                fulfilled_wait_time = fulfil_customer(q, num_service_points,
-                                                      service_points,
-                                                      fulfilled_wait_time);
-            }
-
-            /* Updates the time waited of every customer in the queue. */
-            increment_waiting_times(q);
-            num_timed_out = leave_queue_early(q, num_timed_out);
-
-            /* Displays a record for each time interval. */
+            /* Displays a record for each time interval if only one
+ *             simulation is being performed. */
             if (num_simulations == 1)
             {
                 int num_being_served = count_busy_service_points(

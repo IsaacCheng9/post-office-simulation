@@ -17,7 +17,6 @@ float *read_parameter_file(char *input_parameters)
     /* Opens the parameter file to read from it. */
     if ((fp = fopen(input_parameters, "r")) == NULL)
     {
-        printf("Unable to open file for read access.\n");
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -65,7 +64,6 @@ void output_parameters(char *results_file, int max_queue_length,
     /* Error handling for opening the file in append mode. */
     if ((fp = fopen(results_file, "w")) == NULL)
     {
-        printf("Unable to open file for append access.\n");
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(1);
     }
@@ -94,7 +92,6 @@ void output_interval_record(char *results_file, int time_slice,
     /* Error handling for opening the file in append mode. */
     if ((fp = fopen(results_file, "a")) == NULL)
     {
-        printf("Unable to open file for append access.\n");
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(1);
     }
@@ -124,7 +121,6 @@ void output_results_sing(char *results_file, int time_after_closing,
     /* Error handling for opening the file in append mode. */
     if ((fp = fopen(results_file, "a")) == NULL)
     {
-        printf("Unable to open file for append access.\n");
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(1);
     }
@@ -148,7 +144,6 @@ void output_results_mult(char *results_file, int num_simulations,
     /* Error handling for opening the file in write mode. */
     if ((fp = fopen(results_file, "a")) == NULL)
     {
-        printf("Unable to open file for write access.\n");
         fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
         exit(1);
     }

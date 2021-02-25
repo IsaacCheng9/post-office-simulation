@@ -1,5 +1,5 @@
 /* Simulation of the queuing system in a Post Office branch using linked
-lists. */
+ *  *  * lists. */
 #include <simQ.h>
 
 int main(int argc, char **argv)
@@ -77,42 +77,10 @@ int main(int argc, char **argv)
     {
         /* Performs the simulation(s). */
         QUEUE *q = create_empty_queue(max_queue_length);
-        printf("\nStarting simulation #%d:\n", simulation);
         time_slice = 0;
         closed = 0;
         while (closed == 0)
         {
-            printf("\nTime Slice: %d\n", time_slice);
-
-            /* Adds new customers to the queue if not past closing time. */
-            if (time_slice <= closing_time)
-            {
-                int new_customer;
-                int num_new_customers = generate_random_poisson(
-                    avg_customer_rate, r);
-                for (new_customer = 0; new_customer < num_new_customers;
-                     new_customer++)
-                {
-                    num_customers++;
-                    /* Marks the customer as unfulfilled if queue is full. */
-                    if (q->queue_length == max_queue_length)
-                    {
-                        num_unfulfilled++;
-                        printf("   Customer left unfulfilled; queue is "
-                               "full.\n");
-                    }
-                    /* Adds customer to the queue if there is space. */
-                    else
-                    {
-                        enqueue(q, mean_mins, std_dev_mins, mean_tolerance,
-                                std_dev_tolerance, r);
-                        printf("   Customer added to queue. Queue length is "
-                               "now %d.\n",
-                               q->queue_length);
-                    }
-                }
-            }
-
             /* Serves customers currently on the service points. */
             num_fulfilled = serve_customers(num_fulfilled, num_service_points,
                                             service_points);
@@ -129,7 +97,32 @@ int main(int argc, char **argv)
             increment_waiting_times(q);
             num_timed_out = leave_queue_early(q, num_timed_out);
 
-            /* Displays a record for each time interval. */
+            /* Adds new customers to the queue if not past closing time. */
+            if (time_slice <= closing_time)
+            {
+                int new_customer;
+                int num_new_customers = generate_random_poisson(
+                    avg_customer_rate, r);
+                for (new_customer = 0; new_customer < num_new_customers;
+                     new_customer++)
+                {
+                    num_customers++;
+                    /* Marks the customer as unfulfilled if queue is full. */
+                    if (q->queue_length == max_queue_length)
+                    {
+                        num_unfulfilled++;
+                    }
+                    /* Adds customer to the queue if there is space. */
+                    else
+                    {
+                        enqueue(q, mean_mins, std_dev_mins, mean_tolerance,
+                                std_dev_tolerance, r);
+                    }
+                }
+            }
+
+            /* Displays a record for each time interval if only one
+ *  *             simulation is being performed. */
             if (num_simulations == 1)
             {
                 int num_being_served = count_busy_service_points(
@@ -172,3 +165,5 @@ int main(int argc, char **argv)
     free(service_points);
     return EXIT_SUCCESS;
 }
+
+

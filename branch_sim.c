@@ -272,11 +272,12 @@ float *read_parameter_file(char *input_parameters)
     fscanf(fp, "\nmaxQueueLength %f", &parameters[0]);
     fscanf(fp, "\nnumServicePoints %f", &parameters[1]);
     fscanf(fp, "\nclosingTime %f", &parameters[2]);
-    fscanf(fp, "\naverageCustomersPerInterval %f", &parameters[3]);
-    fscanf(fp, "\nmeanMins %f", &parameters[4]);
-    fscanf(fp, "\nstandardDeviationMins %f", &parameters[5]);
-    fscanf(fp, "\nmeanTolerance %f", &parameters[6]);
-    fscanf(fp, "\nstandardDeviationTolerance %f", &parameters[7]);
+    fscanf(fp, "\naverageCustomersPerMinute %f", &parameters[3]);
+    fscanf(fp, "\nmeanMinsPerCustomerTask %f", &parameters[4]);
+    fscanf(fp, "\nstandardDeviationMinsPerCustomerTask %f", &parameters[5]);
+    fscanf(fp, "\nmeanMaxQueueTimePerCustomer %f", &parameters[6]);
+    fscanf(fp, "\nstandardDeviationMaxQueueTimePerCustomer %f",
+           &parameters[7]);
 
     fclose(fp);
     return parameters;

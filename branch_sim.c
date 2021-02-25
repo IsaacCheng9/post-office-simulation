@@ -41,7 +41,6 @@ int fulfil_customer(QUEUE *, int, int *, int);
 int serve_customers(int, int, int *);
 int leave_queue_early(QUEUE *, int);
 int is_branch_empty(QUEUE *, int, int *);
-void print_queue(QUEUE *);
 void output_parameters(char *, int, int, int, float, float, float, float,
                        float);
 void output_interval_record(char *, int, int, int, int, int, int, int);
@@ -285,10 +284,10 @@ float *read_parameter_file(char *input_parameters)
         parameters[6] < 0 || parameters[7] < 0)
     {
         fprintf(stderr, "You have input an invalid parameter value! "
-        "\nmaxQueueLength, averageCustomersPerMinute, meanMinsPerCustomerTask, "
-        "standardDeviationMinsPerCustomerTask, meanMaxQueueTimePerCustomer, "
-        "and standardDeviationMaxQueueTimePerCustomer must be at least 0."
-        "\nnumServicePoints and closingTime must be at least 1.");
+                        "\nmaxQueueLength, averageCustomersPerMinute, meanMinsPerCustomerTask, "
+                        "standardDeviationMinsPerCustomerTask, meanMaxQueueTimePerCustomer, "
+                        "and standardDeviationMaxQueueTimePerCustomer must be at least 0."
+                        "\nnumServicePoints and closingTime must be at least 1.");
         exit(EXIT_FAILURE);
     }
 

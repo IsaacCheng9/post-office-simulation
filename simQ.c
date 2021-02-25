@@ -1,5 +1,7 @@
 /* Simulation of the queuing system in a Post Office branch using linked
 lists. */
+#include <simQ.h>
+
 int main(int argc, char **argv)
 {
     const gsl_rng_type *T;

@@ -10,6 +10,8 @@ lists. */
 #include <stdlib.h>
 #include <string.h>
 
+#include <customer.h>
+
 /* Queue structure in a linked list, with front and rear pointers. */
 struct queue
 {

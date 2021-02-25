@@ -62,6 +62,21 @@ int main(int argc, char **argv)
     /* Seeds the random number generator based on current time. */
     gsl_rng_set(r, time(0));
 
+    /* Checks that enough parameters have been passed into the program. */
+    if (argc != 4)
+    {
+        fprintf(stderr, "Not enough parameters passed in!");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Checks that the second parameter input by the user is a digit. */
+    if (!isdigit(argv[2]))
+    {
+        fprintf(stderr, "You have not input a digit for the number of "
+                        "simulations!");
+        exit(EXIT_FAILURE);
+    }
+
     /* Takes the configuration from the parameters. */
     char *input_parameters = argv[1];
     int num_simulations = atoi(argv[2]);

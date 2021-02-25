@@ -65,7 +65,9 @@ int main(int argc, char **argv)
     /* Checks that enough parameters have been passed into the program. */
     if (argc != 4)
     {
-        fprintf(stderr, "Not enough parameters passed in!");
+        fprintf(stderr, "Not enough parameters passed in! You must provide "
+                        "the input file, number of simulations, and "
+                        "output file.");
         exit(EXIT_FAILURE);
     }
 

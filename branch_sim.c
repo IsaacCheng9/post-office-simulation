@@ -279,6 +279,19 @@ float *read_parameter_file(char *input_parameters)
     fscanf(fp, "\nstandardDeviationMaxQueueTimePerCustomer %f",
            &parameters[7]);
 
+    /* Checks that parameters have valid values. */
+    if (&parameters[0] < 0 || &parameters[1] < 1 || &parameters[2] < 1 ||
+        &parameters[3] < 0 || &parameters[4] < 0 || &parameters[5] < 0 ||
+        &parameters[6] < 0 || &parameters[7] < 0)
+    {
+        fprintf(stderr, "You have input an invalid parameter value! "
+        "\nmaxQueueLength, averageCustomersPerMinute, meanMinsPerCustomerTask, "
+        "standardDeviationMinsPerCustomerTask, meanMaxQueueTimePerCustomer, "
+        "and standardDeviationMaxQueueTimePerCustomer must be at least 0."
+        "\nnumServicePoints and closingTime must be at least 1.");
+        exit(EXIT_FAILURE);
+    }
+
     fclose(fp);
     return parameters;
 }

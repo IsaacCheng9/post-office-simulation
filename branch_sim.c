@@ -70,12 +70,12 @@ int main(int argc, char **argv)
     }
 
     /* Checks that the second parameter input by the user is a digit. */
-    if (!isdigit(argv[2]))
+    /* if (!isdigit(argv[2]))
     {
         fprintf(stderr, "You have not input a digit for the number of "
                         "simulations!");
         exit(EXIT_FAILURE);
-    }
+    } */
 
     /* Takes the configuration from the parameters. */
     char *input_parameters = argv[1];

@@ -1,0 +1,7 @@
+gcc -ansi -I./ -c customer.c -o customer.o
+gcc -ansi -I./ -c input_output.c -o input_output.o
+gcc -ansi -I./ -c queue.c -o queue.o
+gcc -ansi -I./ -c random_numbers.c -o random_numbers.o
+gcc -ansi -I./ -c service_points.c -o service_points.o
+gcc -ansi -I./ -c simQ.c -o simQ.o
+gcc -lgsl -lgslcblas customer.o input_output.o queue.o random_numbers.o service_points.o simQ.o -o simQ

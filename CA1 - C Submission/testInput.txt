@@ -1,0 +1,8 @@
+maxQueueLength 2
+numServicePoints 2
+closingTime 10
+averageCustomersPerMinute 1
+meanMinsPerCustomerTask 5
+standardDeviationMinsPerCustomerTask 2
+meanMaxQueueTimePerCustomer 5
+standardDeviationMaxQueueTimePerCustomer 2

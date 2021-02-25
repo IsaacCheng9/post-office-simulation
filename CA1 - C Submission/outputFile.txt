@@ -1,0 +1,154 @@
+Parameters Read From Input File:
+   Max Queue Length: 2
+   Number of Service Points: 2
+   Closing Time: 10
+   Average Customers Per Interval: 1.000000
+   Mean of Task Length: 5.000000
+   Standard Deviation of Task Length: 2.000000
+   Mean of Customer Tolerance: 5.000000
+   Standard Deviation of Customer Tolerance: 2.000000
+
+Time Slice: 0
+   Number of Customers Currently Being Served: 0
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 0
+   Number of Unfulfilled Customers: 0
+   Number of Timed Out Customers: 0
+
+Time Slice: 1
+   Number of Customers Currently Being Served: 1
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 0
+   Number of Unfulfilled Customers: 0
+   Number of Timed Out Customers: 0
+
+Time Slice: 2
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 0
+   Number of Unfulfilled Customers: 0
+   Number of Timed Out Customers: 1
+
+Time Slice: 3
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 0
+   Number of Unfulfilled Customers: 0
+   Number of Timed Out Customers: 1
+
+Time Slice: 4
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 1
+   Number of Fulfilled Customers: 0
+   Number of Unfulfilled Customers: 0
+   Number of Timed Out Customers: 1
+
+Time Slice: 5
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 1
+   Number of Unfulfilled Customers: 0
+   Number of Timed Out Customers: 1
+
+Time Slice: 6
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 1
+   Number of Unfulfilled Customers: 0
+   Number of Timed Out Customers: 1
+
+Time Slice: 7
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 2
+   Number of Fulfilled Customers: 1
+   Number of Unfulfilled Customers: 1
+   Number of Timed Out Customers: 1
+
+Time Slice: 8
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 1
+   Number of Fulfilled Customers: 2
+   Number of Unfulfilled Customers: 1
+   Number of Timed Out Customers: 1
+
+Time Slice: 9
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 1
+   Number of Fulfilled Customers: 3
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 10
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 1
+   Number of Fulfilled Customers: 3
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Closing time has been reached!
+
+Time Slice: 11
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 1
+   Number of Fulfilled Customers: 3
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 12
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 4
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 13
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 4
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 14
+   Number of Customers Currently Being Served: 2
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 4
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 15
+   Number of Customers Currently Being Served: 1
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 5
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 16
+   Number of Customers Currently Being Served: 1
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 5
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 17
+   Number of Customers Currently Being Served: 1
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 5
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 18
+   Number of Customers Currently Being Served: 1
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 5
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time Slice: 19
+   Number of Customers Currently Being Served: 0
+   Number of People Currently in the Queue: 0
+   Number of Fulfilled Customers: 6
+   Number of Unfulfilled Customers: 2
+   Number of Timed Out Customers: 1
+
+Time After Closing to Finish Serving Remaining Customers: 9
+Average Waiting Time of Fulfilled Customers: 1.166667

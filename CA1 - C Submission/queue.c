@@ -107,17 +107,12 @@ int fulfil_customer(QUEUE *q, int num_service_points, int *service_points,
         {
             service_points[point] = customer->mins;
             fulfilled_wait_time += customer->time_waited;
-            printf("   Fulfilled customer! They spent %d minutes waiting in "
-                   "the queue. Their task will take %d minutes. Queue length "
-                   "is now %d.\n",
-                   customer->time_waited, customer->mins, q->queue_length - 1);
             dequeue(q);
             return fulfilled_wait_time;
         }
     }
 
     /* All service points may be in use. */
-    printf("   No service points free!\n");
     return fulfilled_wait_time;
 }
 
@@ -135,7 +130,6 @@ int serve_customers(int num_fulfilled, int num_service_points,
             /* Checks if a customer has been fully served. */
             if (service_points[point] == 0)
             {
-                printf("   Finished serving customer!\n");
                 num_fulfilled++;
             }
         }
@@ -174,10 +168,6 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
 
             num_timed_out++;
             q->queue_length--;
-            printf("   Customer has timed out. They waited too long, and left "
-                   "the queue early after %d minutes. Queue length is now "
-                   "%d.\n",
-                   customer->time_waited, q->queue_length);
         }
         customer = customer->next;
     }

@@ -1,4 +1,5 @@
-/* Simulation of the queuing system in a Post Office branch. */
+/* Simulation of the queuing system in a Post Office branch using linked
+lists. */
 #include <errno.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -98,9 +99,6 @@ int main(int argc, char **argv)
     output_parameters(results_file, max_queue_length, num_service_points,
                       closing_time, avg_customer_rate, mean_mins, std_dev_mins,
                       mean_tolerance, std_dev_tolerance);
-
-    /* Seeds for randomness. */
-    srand(time(0));
 
     /* Creates service points and displays them at the start. */
     int *service_points = (int *)create_service_points(num_service_points);
@@ -559,6 +557,8 @@ void output_parameters(char *results_file, int max_queue_length,
             max_queue_length, num_service_points, closing_time,
             avg_customer_rate, mean_mins, std_dev_mins, mean_tolerance,
             std_dev_tolerance);
+
+    fclose(fp);
 }
 
 /* Outputs live information about the simulation for a given time interval. */
@@ -589,6 +589,8 @@ void output_interval_record(char *results_file, int time_slice,
     {
         fprintf(fp, "Closing time has been reached!\n\n");
     }
+
+    fclose(fp);
 }
 
 /* Outputs statistics about averages in a file for a single simulation. */
@@ -609,6 +611,8 @@ void output_results_sing(char *results_file, int time_after_closing,
                 "%d\nAverage Waiting Time of Fulfilled Customers: %f\n",
             time_after_closing,
             (float)fulfilled_wait_time / num_fulfilled);
+
+    fclose(fp);
 }
 
 /* Outputs statistics about averages in a file for multiple simulations. */
@@ -638,4 +642,6 @@ void output_results_mult(char *results_file, int num_simulations,
             (float)num_timed_out / num_simulations,
             (float)fulfilled_wait_time / num_fulfilled,
             (float)time_after_closing / num_simulations);
+
+    fclose(fp);
 }

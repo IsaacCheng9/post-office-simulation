@@ -1,15 +1,15 @@
 Parameters Read From Input File:
    Max Queue Length: 2
    Number of Service Points: 2
-   Closing Time: 10
-   Average Customers Per Interval: 1.000000
+   Closing Time: 540
+   Average Customers Per Interval: 0.500000
    Mean of Task Length: 5.000000
    Standard Deviation of Task Length: 2.000000
    Mean of Customer Tolerance: 5.000000
    Standard Deviation of Customer Tolerance: 2.000000
 
-Average Number of Customers Fulfilled: 5.666667
-Average Number of Customers Unfulfilled: 1.333333
-Average Number of Customers Timed Out: 1.333333
-Average Waiting Time of Fulfilled Customers: 0.941176
-Average Time After Closing to Finish Serving Remaining Customers: 5.000000
+Average Number of Customers Fulfilled: 186.087997
+Average Number of Customers Unfulfilled: 49.313999
+Average Number of Customers Timed Out: 30.879000
+Average Waiting Time of Fulfilled Customers: 1.130992
+Average Time After Closing to Finish Serving Remaining Customers: 5.594000

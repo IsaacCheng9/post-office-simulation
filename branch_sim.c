@@ -7,7 +7,6 @@ lists. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 /* Customer structure using a linked list, acting as a node. */
 struct customer

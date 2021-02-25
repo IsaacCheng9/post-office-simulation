@@ -223,7 +223,7 @@ int main(int argc, char **argv)
 /* Generates a random numberator using Gaussian distribution. */
 int generate_random_poisson(float avg_customer_rate, gsl_rng *r)
 {
-    int random = -1;
+    int random;
 
     /* Creates a random number using the Poisson distribution based on
     the rate parameter. */

@@ -8,8 +8,8 @@ Parameters Read From Input File:
    Mean of Customer Tolerance: 5.000000
    Standard Deviation of Customer Tolerance: 2.000000
 
-Average Number of Customers Fulfilled: 186.087997
-Average Number of Customers Unfulfilled: 49.313999
-Average Number of Customers Timed Out: 30.879000
-Average Waiting Time of Fulfilled Customers: 1.130992
-Average Time After Closing to Finish Serving Remaining Customers: 5.594000
+Average Number of Customers Fulfilled: 186.216003
+Average Number of Customers Unfulfilled: 49.519001
+Average Number of Customers Timed Out: 30.993000
+Average Waiting Time of Fulfilled Customers: 1.134339
+Average Time After Closing to Finish Serving Remaining Customers: 5.471000

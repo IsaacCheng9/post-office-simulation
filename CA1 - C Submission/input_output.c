@@ -162,4 +162,3 @@ void output_results_mult(char *results_file, int num_simulations,
 
     fclose(fp);
 }
-

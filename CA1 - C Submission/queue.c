@@ -48,8 +48,8 @@ void enqueue(QUEUE *q, int mean_mins, int std_dev_mins, int mean_tolerance,
                                              std_dev_tolerance, r);
 
     /* Points front and rear of the queue to the new customer if empty.
- *     Otherwise, points the previous rear of the customer to this customer, and
- *         sets the new customer as the rear. */
+ *  *     Otherwise, points the previous rear of the customer to this customer, and
+ *   *         sets the new customer as the rear. */
     if (is_queue_empty(q))
     {
         q->front = q->rear = customer;
@@ -81,7 +81,7 @@ int dequeue(QUEUE *q)
     q->front = q->front->next;
 
     /* If this makes the front empty, make the rear empty, as this means the
- *     queue is empty. */
+ *  *     queue is empty. */
     if (q->front == NULL)
     {
         q->rear = NULL;
@@ -160,7 +160,7 @@ int leave_queue_early(QUEUE *q, int num_timed_out)
             q->front = q->front->next;
 
             /* If this makes the front empty, make the rear empty, as this
- *             means the queue is empty. */
+ *  *             means the queue is empty. */
             if (q->front == NULL)
             {
                 q->rear = NULL;
@@ -196,4 +196,3 @@ int is_branch_empty(QUEUE *q, int num_service_points, int *service_points)
         return 1;
     }
 }
-

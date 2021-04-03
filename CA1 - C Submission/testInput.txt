@@ -1,8 +1,0 @@
-maxQueueLength 2
-numServicePoints 2
-closingTime 540
-averageCustomersPerMinute 0.5
-meanMinsPerCustomerTask 5
-standardDeviationMinsPerCustomerTask 2
-meanMaxQueueTimePerCustomer 5
-standardDeviationMaxQueueTimePerCustomer 2
